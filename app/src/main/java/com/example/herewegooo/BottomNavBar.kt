@@ -46,10 +46,9 @@ fun BottomNavBar(
             NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
             NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
-    } else if (userViewModel.userName == "admin"){
+    } else if (userViewModel.userRole == "admin"){
         listOf(
-            NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
-            NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
+            NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "adminPanel"),
         )
     } else {
         listOf(
@@ -131,9 +130,19 @@ fun BottomNavBar(
                     disabledIconColor = Color.White
                 ),
                 modifier = if (isSelected) {
-                    Modifier.background(Color(0xFF40B3AC))
+                    if (userViewModel.userRole == "admin"){
+                        Modifier.background(Color(0xFF303036))
+                    }
+                    else {
+                        Modifier.background(Color(0xFF40B3AC))
+                    }
                 } else {
-                    Modifier.background(Color(0xFF7A9BA9))
+                    if (userViewModel.userRole == "admin"){
+                        Modifier.background(Color(0xFF0D0DE7))
+                    }
+                    else {
+                        Modifier.background(Color(0xFF7A9BA9))
+                    }
                 }
             )
         }

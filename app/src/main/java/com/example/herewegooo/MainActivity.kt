@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                val snackbarType = remember { mutableStateOf(SnackbarType.SUCCESS) }
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
 
@@ -167,10 +168,11 @@ class MainActivity : ComponentActivity() {
                         .imePadding(),
                     snackbarHost = {
                         SnackbarHost(snackbarHostState) { data ->
+                            val contentColor = if (snackbarType.value == SnackbarType.ERROR) Color.Red else Color(0xFF187212)
                             Snackbar(
                                 snackbarData = data,
                                 containerColor = Color.Black,
-                                contentColor = Color.Red,
+                                contentColor = contentColor,
                                 shape = RoundedCornerShape(25.dp),
                             )
                         }
@@ -222,3 +224,6 @@ data class NavItem(
     val forRoute: String
 )
 
+enum class SnackbarType {
+    SUCCESS, ERROR
+}

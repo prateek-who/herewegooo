@@ -147,6 +147,7 @@ fun Login(navController: NavController,
 
     val focusManager = LocalFocusManager.current
 
+    val snackbarType = remember { mutableStateOf(SnackbarType.ERROR) }
     val coroutineScope = rememberCoroutineScope()
 
     val client = remember { supabaseClient() }

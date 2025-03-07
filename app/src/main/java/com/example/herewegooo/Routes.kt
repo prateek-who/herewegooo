@@ -77,6 +77,10 @@ fun AppNavigate(
             MainScreen(navController = navController)
         }
 
+        composable(route = "adminPanel"){
+            AdminPanel()
+        }
+
         composable(
             route = "floorNumber/{floornumber}",
             arguments = listOf(
@@ -104,7 +108,7 @@ fun AppNavigate(
             entry ->
             val floor = entry.arguments?.getString("floornumber")?:"0"
             val room = entry.arguments?.getString("roomnumber")?:"0"
-            WeInRoom(navController = navController, floor, room, userViewModel = userViewModel)
+            WeInRoom(navController = navController, floor, room, userViewModel = userViewModel, onShowSnackbar = onShowSnackbar)
         }
 
         composable(

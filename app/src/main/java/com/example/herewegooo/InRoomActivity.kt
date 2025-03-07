@@ -100,6 +100,7 @@ fun WeInRoom(
     floor: String,
     room: String,
     userViewModel: UserViewModel,
+    onShowSnackbar: (String) -> Unit
 ) {
     val startHour = 7
     val endHour = 20
@@ -480,7 +481,8 @@ fun WeInRoom(
                 openDialog = true,
                 onDismiss = { showDialog = false },
                 roomNumber = room,
-                user = userViewModel
+                user = userViewModel,
+                onShowSnackbar = onShowSnackbar
             )
         }
     }

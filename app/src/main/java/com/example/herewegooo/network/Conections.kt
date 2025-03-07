@@ -20,6 +20,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.sql.Date
 import java.time.LocalTime
 
 
@@ -29,6 +30,10 @@ data class ProfileRole(
     val username: String
 )
 
+@Serializable
+data class IdColumnVerify(
+    val id: Int
+)
 
 @OptIn(SupabaseInternal::class)
 fun supabaseClient(): SupabaseClient {
@@ -118,6 +123,34 @@ data class Event(
     val color: Color /*= Color(0xFFDC0D0D)*/
 )
 
+
+data class sendRequest(
+    val classDate: String,
+    val startTime: LocalTime,
+    val endTime: LocalTime,
+    val facultyName: String,
+    val classroomId: Int,
+    val reason: String
+)
+
+@Serializable
+data class Request(
+    val class_date: String,
+
+    @SerialName("start_time")
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @SerialName("end_time")
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val faculty_name: String,
+    val classroom_id: Int,
+    val reason: String
+)
+
+
 fun RawEvent.toEvent(): Event = Event(
     startTime = this.startTime,
     endTime = this.endTime,
@@ -125,25 +158,3 @@ fun RawEvent.toEvent(): Event = Event(
     facultyName = this.facultyName?.user?.username,
     color = this.facultyName?.color ?:Color(0xFF9B4CBF)
 )
-
-//suspend fun getEvent(client: SupabaseClient): Result<Unit> {
-//    return runCatching {
-//        client.from("timetable")
-//            .select(columns = Columns.ALL){
-//                filter {
-//                    eq("id", 5)
-//                }
-//            }.decodeList<Event>()
-//    }
-//}
-
-//suspend fun getTimeTable(client: SupabaseClient): Result<Unit> {
-//    return runCatching {
-//        client.from("timetable")
-//            .select(columns = Columns.ALL) {
-//                filter {
-//                    eq("faculty_id", 5)
-//                }
-//            }.decodeList<Events>()
-//    }
-//}
