@@ -99,7 +99,7 @@ fun WeInRoom(
     navController: NavController,
     floor: String,
     room: String,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
 ) {
     val startHour = 7
     val endHour = 20
@@ -109,8 +109,6 @@ fun WeInRoom(
     val client = supabaseClient()
 
     val currentDate = LocalDate.now()
-//    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-//    val formattedDate = currentDate.format(formatter)
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -481,7 +479,8 @@ fun WeInRoom(
             MyDialog(
                 openDialog = true,
                 onDismiss = { showDialog = false },
-                roomNumber = room
+                roomNumber = room,
+                user = userViewModel
             )
         }
     }

@@ -40,10 +40,15 @@ fun BottomNavBar(
     content: @Composable () -> Unit
 ){
     println("Role: ${userViewModel.userRole}, Name: ${userViewModel.userName}")
-    val navItemList = if (userViewModel.userRole == "teacher" || userViewModel.userName == "admin") {
+    val navItemList = if (userViewModel.userRole == "teacher") {
         listOf(
             NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
             NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
+            NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
+        )
+    } else if (userViewModel.userName == "admin"){
+        listOf(
+            NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
             NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
     } else {
@@ -52,6 +57,7 @@ fun BottomNavBar(
             NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
         )
     }
+
 
     val density = LocalDensity.current
     val imeVisible = with(density) {

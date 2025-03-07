@@ -250,9 +250,17 @@ fun Login(navController: NavController,
 //                                println(user.role)
 //                                println(user.username)
 
-                                    navController.navigate(route = "home") {
-                                        popUpTo(route = "starthere") {
-                                            inclusive = true
+                                    if(user.role == "admin"){
+                                        navController.navigate(route = "adminPanel") {
+                                            popUpTo(route = "starthere") {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }else {
+                                        navController.navigate(route = "home") {
+                                            popUpTo(route = "starthere") {
+                                                inclusive = true
+                                            }
                                         }
                                     }
                                 }
