@@ -68,7 +68,12 @@ fun BottomNavBar(
 
     NavigationBar(
         modifier = Modifier.height(navHeight),
-        containerColor = Color(0xFF7A9BA9),
+        containerColor =
+            if (userViewModel.userRole == "admin") {
+                Color(0xFF1E1E26) // admin panel color
+            }else{
+                Color(0xFF1E1E26) // Everybody else uses this color
+            },
         tonalElevation = 5.dp
     ) {
         navItemList.forEachIndexed { index, navItem ->
@@ -82,7 +87,9 @@ fun BottomNavBar(
                             modifier = Modifier
                                 .size(40.dp)
                                 .offset(y = 5.dp)
-                                .background(Color(0xFFFFBA00), shape = CircleShape),
+                                .background(
+                                    if (userViewModel.userRole == "admin") Color(0xFFFF3A3A) else Color(0xFF4F6BFF),
+                                    shape = CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -106,7 +113,7 @@ fun BottomNavBar(
                     if (isSelected) {
                         Text(
                             text = navItem.label,
-                            color = Color.White,
+                            color = Color(0xFFF0F0F5),
                             fontFamily = funnelFont,
                             fontSize = 16.sp,
                             modifier = Modifier.offset(y = (-5).dp)
@@ -114,7 +121,7 @@ fun BottomNavBar(
                     } else {
                         Text(
                             text = navItem.label,
-                            color = Color.White,
+                            color = Color(0xFFF0F0F5),
                             fontFamily = funnelFont,
                             fontSize = 12.sp,
                             modifier = Modifier.offset(y = 0.dp)
@@ -131,18 +138,13 @@ fun BottomNavBar(
                 ),
                 modifier = if (isSelected) {
                     if (userViewModel.userRole == "admin"){
-                        Modifier.background(Color(0xFF303036))
+                        Modifier.background(Color(0xFF1C1C1E))
                     }
                     else {
-                        Modifier.background(Color(0xFF40B3AC))
+                        Modifier.background(Color(0xFF121218))
                     }
                 } else {
-                    if (userViewModel.userRole == "admin"){
-                        Modifier.background(Color(0xFF0D0DE7))
-                    }
-                    else {
-                        Modifier.background(Color(0xFF7A9BA9))
-                    }
+                    Modifier.background(Color(0xFF1E1E26))
                 }
             )
         }

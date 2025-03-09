@@ -27,8 +27,8 @@ import androidx.navigation.NavController
 @Composable
 fun EightFloor(navController: NavController, floor: String){
     val gradientColorChoice = listOf(
-        Color(0xFF2A4D6E),
-        Color(0xFF40B3AC),
+        Color(0xFF121218),
+        Color(0xFF121218),
 //        Color(0xFF0C3B2E),
 //        Color(0xFF0A4B38),
     )
@@ -81,7 +81,9 @@ fun EightFloor(navController: NavController, floor: String){
                 ){
                     Text(text = label,
                         fontSize = 30.sp,
-                        fontFamily = roomFont)
+                        fontFamily = roomFont,
+                        color = Color(0xFFF0F0F5)
+                        )
                 }
             }
         }

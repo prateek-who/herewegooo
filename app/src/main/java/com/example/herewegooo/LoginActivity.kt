@@ -140,7 +140,7 @@ import com.example.herewegooo.ui.theme.HerewegoooTheme
 @Composable
 fun Login(navController: NavController,
           userViewModel: UserViewModel,
-          onShowSnackbar: (String) -> Unit
+          onShowSnackbar: (String, SnackbarType) -> Unit
 ) {
     var emailText by remember { mutableStateOf("") }
     var passText by remember { mutableStateOf("") }
@@ -223,9 +223,7 @@ fun Login(navController: NavController,
                     .offset(y = 70.dp),
                 onClick = {
                     if (emailText.isBlank() || passText.isBlank()) {
-//                    coroutineScope.launch {
-                        onShowSnackbar("Email/ Password cannot be empty!")
-//                    }
+                        onShowSnackbar("Email/ Password cannot be empty!", SnackbarType.ERROR)
                     } else {
                         coroutineScope.launch {
                             singInUser(client, emailText, passText)
@@ -270,10 +268,10 @@ fun Login(navController: NavController,
                                     println(errorType)
                                     val message = when (error) {
                                         is AuthWeakPasswordException -> "Your password is too weak!"
-                                        else -> "Sign-in failed. Please try again."
+                                        else -> "Please try again."
                                     }
 //                                println(error)
-                                    onShowSnackbar("Sign-in failed: $message")
+                                    onShowSnackbar("Sign-in failed: $message", SnackbarType.ERROR)
                                 }
                         }
                     }

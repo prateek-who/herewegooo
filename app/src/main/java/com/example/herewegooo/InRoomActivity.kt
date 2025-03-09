@@ -1,15 +1,6 @@
 package com.example.herewegooo
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,31 +12,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,35 +40,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ModifierInfo
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
-import androidx.navigation.NavHost
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.Event
 import com.example.herewegooo.network.RawEvent
 import com.example.herewegooo.network.supabaseClient
 import com.example.herewegooo.network.toEvent
-import com.example.herewegooo.ui.theme.HerewegoooTheme
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
-import kotlinx.coroutines.coroutineScope
 import java.sql.Date
 import java.time.Duration
 import java.time.LocalDate
@@ -96,11 +63,10 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun WeInRoom(
-    navController: NavController,
     floor: String,
     room: String,
     userViewModel: UserViewModel,
-    onShowSnackbar: (String) -> Unit
+    onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
     val startHour = 7
     val endHour = 20
@@ -137,30 +103,23 @@ fun WeInRoom(
 
         val newlocalDate = localDate.format(newFormatter)
 
-//        println("Local date: $newlocalDate")
         val sqlDate = Date.valueOf(newlocalDate)
-//        println("SQL date: $sqlDate")
 
         events = generateEvent(client, sqlDate, room)
     }
 
 
-    val gradientColorChoice = listOf(
-        Color(0xFF2A4D6E),
-        Color(0xFF40B3AC),
-//        Color(0xFF000000),
-//        Color(0xFF000000)
-    )
-    val gradientBackground = Brush.verticalGradient(
-        colors = gradientColorChoice,
-        startY = 0f,
-        endY = Float.POSITIVE_INFINITY
-    )
+    val backgroundColorChoice = Color(0xFF121218)
+//    val gradientBackground = Brush.verticalGradient(
+//        colors = gradientColorChoice,
+//        startY = 0f,
+//        endY = Float.POSITIVE_INFINITY
+//    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(brush = gradientBackground)
+            .background(color = backgroundColorChoice)
             .verticalScroll(rememberScrollState())
     ) {
         if (userViewModel.userRole == "teacher" || userViewModel.userRole == "admin") {
@@ -199,7 +158,7 @@ fun WeInRoom(
                             .width(60.dp)
                             .height(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFFBA00))
+                            .background(Color(0xFF4F6BFF))
                     ) {
                         Text(
                             text = floor,
@@ -232,7 +191,7 @@ fun WeInRoom(
                             .width(80.dp)
                             .height(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFFBA00))
+                            .background(Color(0xFF4F6BFF))
                     ) {
                         Text(
                             text = room,
@@ -248,7 +207,8 @@ fun WeInRoom(
                 Spacer(modifier = Modifier.weight(0.1f))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
+//                    modifier = Modifier.fillMaxSize()
                 ) {
                     Button(
                         onClick = {
@@ -258,15 +218,17 @@ fun WeInRoom(
                             .width(110.dp)
                             .height(50.dp)
                             .offset(x = (-15).dp, y = 0.dp),
+//                            .fillMaxSize(),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF2A4D6E)
-                        )
+                        ),
+                        contentPadding = PaddingValues(2.dp)
                     ) {
                         Text(
                             text = "Book Slot",
                             fontFamily = topRowFonts,
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -300,7 +262,7 @@ fun WeInRoom(
                             .width(60.dp)
                             .height(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFFBA00))
+                            .background(Color(0xFF4F6BFF))
                     ) {
                         Text(
                             text = floor,
@@ -333,7 +295,7 @@ fun WeInRoom(
                             .width(80.dp)
                             .height(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFFBA00))
+                            .background(Color(0xFF4F6BFF))
                     ) {
                         Text(
                             text = room,
@@ -377,7 +339,7 @@ fun WeInRoom(
                     .offset(x = (-10).dp)
                     .wrapContentSize()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFFBA00))
+                    .background(Color(0xFF4F6BFF))
             ) {
 
                 Text(
@@ -519,7 +481,7 @@ fun TimelineComponent(
                         fontFamily = oswaldFont,
 //                        fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color.White
+                        color = Color(0xFFA2A2A8)
 //                    style = MaterialTheme.typography.bodySmall
                     )
 
@@ -544,8 +506,8 @@ fun TimelineComponent(
                             .padding(start = 8.dp)
                             .offset(y = pixelsPerHour / 2),
                         fontFamily = oswaldFont,
-                        fontSize = 11.sp,
-                        color = Color.White
+                        fontSize = 12.sp,
+                        color = Color(0xFFA2A2A8)
                     )
 
                     HorizontalDivider(
@@ -607,8 +569,15 @@ fun EventsComponent(
                 Box(
                     modifier = Modifier
                         .offset(y = offsetY, x = 2.dp)
-                        .height((durationHours * pixelsPerHour.value).dp)
+                        .height((durationHours * pixelsPerHour.value).dp -2.dp)
                         .width(295.dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 10.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 10.dp
+                            ))
 //                        .border(width = 2.dp, color = event.color.copy(alpha = 1f), shape = RoundedCornerShape(5.dp))
 //                        .background(Color.Transparent),
 //                        .background(event.color.copy(alpha = 0.2f)),
@@ -622,7 +591,7 @@ fun EventsComponent(
                         // Event Name
                         Text(
                             text = event.title,
-                            color = Color.White,
+                            color = Color(0xFFF0F0F5),
                             fontSize = 30.sp,
                             fontFamily = tryThisFont,
                             fontWeight = FontWeight.Bold,
@@ -631,7 +600,7 @@ fun EventsComponent(
                         // Event time (start - end)
                         Text(
                             text = "Time: $startTimeFormat - $endTimeFormat",
-                            color = Color.White,
+                            color = Color(0xFFF0F0F5),
                             fontSize = 16.sp,
                             fontFamily = tryThisFont,
                             fontWeight = FontWeight.Bold,
@@ -641,7 +610,7 @@ fun EventsComponent(
                         event.facultyName?.let { facultyName ->
                             Text(
                                 text = "Faculty: $facultyName",
-                                color = Color.White,
+                                color = Color(0xFFF0F0F5),
                                 fontSize = 16.sp,
                                 fontFamily = tryThisFont,
                             )

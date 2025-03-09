@@ -1,6 +1,7 @@
 package com.example.herewegooo
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -68,10 +69,11 @@ fun MainScreen(navController: NavController) {
     val btnColor = ButtonDefaults.buttonColors(
         containerColor = Color.Transparent,
     )
+    val buttonTextColor = Color(0xFFF0F0F5)
 
     val gradientColorChoice = listOf(
-        Color(0xFF2A4D6E),
-        Color(0xFF40B3AC),
+        Color(0xFF121218),
+        Color(0xFF121218),
 //        Color(0xFF6D9773),
     )
     val gradientBackground = Brush.verticalGradient(
@@ -138,7 +140,7 @@ fun MainScreen(navController: NavController) {
                     placeholder = {
                         Text(
                             text = "Search your room",
-                            color = Color(0xFFddd3ed),
+                            color = Color(0xFF79797F),
                             fontSize = 20.sp,
                             fontFamily = floorFont
                         )
@@ -149,8 +151,9 @@ fun MainScreen(navController: NavController) {
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.White,
-                        unfocusedIndicatorColor = Color.White,
-                        focusedIndicatorColor = Color.White
+                        unfocusedIndicatorColor = Color(0xFF79797F),
+                        focusedIndicatorColor = Color.White,
+                        unfocusedTextColor = buttonTextColor
                     ),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number
@@ -166,7 +169,8 @@ fun MainScreen(navController: NavController) {
                             .width(280.dp)
 //                            .align(Alignment.Center)
 //                            .offset(x = 30.dp)
-                            .background(Color(0xFF2A4D6E))
+                            .background(Color(0xFF242432))
+                            .border(width = 2.dp, color = Color(0xFF3C3C3E))
                     ) {
                         // Scrollable Column with constrained height
                         val itemHeight = 48.dp // Approximate height of DropdownMenuItem
@@ -189,7 +193,7 @@ fun MainScreen(navController: NavController) {
                                                 text = room,
                                                 color = Color.White,
                                                 fontFamily = funnelFont,
-                                                fontSize = 15.sp,
+                                                fontSize = 18.sp,
                                                 modifier = Modifier.offset(x = 20.dp)
                                             )
                                         }
@@ -225,7 +229,7 @@ fun MainScreen(navController: NavController) {
                         text = "Ground Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
-                        color = Color.White
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -243,6 +247,7 @@ fun MainScreen(navController: NavController) {
                         text = "1st Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -260,6 +265,7 @@ fun MainScreen(navController: NavController) {
                         text = "2nd Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -277,6 +283,7 @@ fun MainScreen(navController: NavController) {
                         text = "3rd Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -294,6 +301,7 @@ fun MainScreen(navController: NavController) {
                         text = "4th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -311,6 +319,7 @@ fun MainScreen(navController: NavController) {
                         text = "5th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -328,6 +337,7 @@ fun MainScreen(navController: NavController) {
                         text = "6th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -345,6 +355,7 @@ fun MainScreen(navController: NavController) {
                         text = "7th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -362,6 +373,7 @@ fun MainScreen(navController: NavController) {
                         text = "8th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Button(
@@ -379,6 +391,7 @@ fun MainScreen(navController: NavController) {
                         text = "9th Floor",
                         fontSize = floorFontSize,
                         fontFamily = floorFont,
+                        color = buttonTextColor
                     )
                 }
                 Spacer(modifier = Modifier.height(45.dp))

@@ -168,7 +168,7 @@ class MainActivity : ComponentActivity() {
                         .imePadding(),
                     snackbarHost = {
                         SnackbarHost(snackbarHostState) { data ->
-                            val contentColor = if (snackbarType.value == SnackbarType.ERROR) Color.Red else Color(0xFF187212)
+                            val contentColor = if (snackbarType.value == SnackbarType.ERROR) Color(0xFFFF3B30) else Color(0xFF34C759)
                             Snackbar(
                                 snackbarData = data,
                                 containerColor = Color.Black,
@@ -200,7 +200,8 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             modifier = Modifier,
                             userViewModel = userViewModel,
-                            onShowSnackbar = { message ->
+                            onShowSnackbar = { message, type ->
+                                snackbarType.value = type
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar(
                                         message = message,

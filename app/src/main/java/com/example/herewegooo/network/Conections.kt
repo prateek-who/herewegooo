@@ -133,6 +133,45 @@ data class sendRequest(
     val reason: String
 )
 
+data class finalEventConformation(
+    val classDate: String,
+    val start_time: LocalTime,
+    val end_time: LocalTime,
+    val course_id: String?,
+    val classroom_id: Int,
+    val faculty_name: String,
+    val reason: String
+)
+
+@Serializable
+data class finalEventPushDataClass(
+    val class_date: String,
+
+    @SerialName("start_time")
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @SerialName("end_time")
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val course_id: String,
+    val classroom_id: Int,
+    val faculty_id: String,
+)
+
+@Serializable
+data class TeacherId(
+    val user_id: String
+)
+
+@Serializable
+data class courseInsertion(
+    val course_id: String,
+    val course_name: String,
+    val faculty_id: String
+)
+
 @Serializable
 data class Request(
     val class_date: String,
@@ -150,6 +189,37 @@ data class Request(
     val reason: String
 )
 
+
+@Serializable
+data class ReceiveRequests(
+    val id: Int,
+    val class_date: String,
+
+    @SerialName("start_time")
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @SerialName("end_time")
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val faculty_name: String,
+    val classroom_id: Int,
+    val request_created: String,
+    val reason: String
+)
+
+@Serializable
+data class DeletionId(
+    val id: Int
+)
+
+@Serializable
+data class CourseTableQuery(
+    val course_id: String,
+    val course_name: String,
+    val faculty_id: String
+)
 
 fun RawEvent.toEvent(): Event = Event(
     startTime = this.startTime,
