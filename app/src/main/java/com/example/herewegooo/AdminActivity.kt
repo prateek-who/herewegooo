@@ -109,7 +109,9 @@ fun AdminPanel(
 ) {
     val client = supabaseClient()
 
-    val requestsState = produceState<List<ReceiveRequests>?>(initialValue = null, client) {
+    var refreshCounter by remember { mutableStateOf(0) }
+
+    val requestsState = produceState<List<ReceiveRequests>?>(initialValue = null, client, refreshCounter) {
         value = getRequests(client)
     }
 
@@ -143,7 +145,9 @@ fun AdminPanel(
             items(requests) { request ->
                 RequestItem(
                     request,
-                    onShowSnackbar)
+                    onShowSnackbar,
+                    onRefresh = { refreshCounter++ }
+                )
             }
         }
     }
@@ -152,7 +156,8 @@ fun AdminPanel(
 @Composable
 fun RequestItem(
     request: ReceiveRequests,
-    onShowSnackbar: (message: String, type: SnackbarType) -> Unit
+    onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
+    onRefresh: () -> Unit
 ) {
     val smallColor = Color(0xFF77767b)
     val bigColor = Color(0xFFF0F0F5)
@@ -326,7 +331,10 @@ fun RequestItem(
             if (showDialog){
                 AdminDialogue(
                     openDialog = true,
-                    onDismiss = { showDialog = false },
+                    onDismiss = {
+                        showDialog = false
+                        onRefresh()
+                                },
                     bookingDate = request.class_date,
                     roomNumber = request.classroom_id.toString(),
                     fromTime = request.start_time,
@@ -338,7 +346,10 @@ fun RequestItem(
             if (showDenyDialoge){
                 AdminDenyDialogue(
                     openDialog = true,
-                    onDismiss = { showDenyDialoge = false },
+                    onDismiss = {
+                        showDenyDialoge = false
+                        onRefresh()
+                                },
                     bookingDate = request.class_date,
                     roomNumber = request.classroom_id.toString(),
                     fromTime = request.start_time,

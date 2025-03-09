@@ -88,7 +88,7 @@ fun BottomNavBar(
                                 .size(40.dp)
                                 .offset(y = 5.dp)
                                 .background(
-                                    if (userViewModel.userRole == "admin") Color(0xFFFF3A3A) else Color(0xFF4F6BFF),
+                                    if (userViewModel.userRole == "admin") Color(0xFFFF3A3A) else Color(0xFF9676DB),
                                     shape = CircleShape),
                             contentAlignment = Alignment.Center
                         ) {

@@ -146,7 +146,10 @@ fun AppNavigate(
         composable(
             route = "profile"
         ) {
-            SelfProfile(navController = navController)
+            SelfProfile(
+                navController = navController,
+                userViewModel = userViewModel
+            )
         }
 
         composable(

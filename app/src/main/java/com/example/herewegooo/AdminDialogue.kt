@@ -240,13 +240,17 @@ fun AdminDialogue(
                         OutlinedTextField(
                             value = customSubjectId,
                             onValueChange = { customSubjectId = it },
-                            label = { Text("Custom Subject ID") },
+                            label = { Text(
+                                text = "Custom Subject ID",
+                                fontFamily = funnelFont
+                            ) },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                             textStyle = TextStyle(
                                 fontFamily = funnelFont,
                                 fontSize = 18.sp,
                                 color = Color(0xFFFAFAFA)
                             ),
+                            shape = RoundedCornerShape(25.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 cursorColor = Color(0xFFFAFAFA),
                                 focusedBorderColor = Color(0xFFA5A5A5),
@@ -260,15 +264,19 @@ fun AdminDialogue(
                         OutlinedTextField(
                             value = customSubjectName,
                             onValueChange = { customSubjectName = it },
-                            label = { Text("Custom subject name") },
+                            label = {
+                                Text(
+                                    text = "Custom subject name",
+                                    fontFamily = funnelFont
+                                ) },
                             modifier = Modifier.fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .clip(RoundedCornerShape(25.dp)),
+                                .padding(horizontal = 16.dp),
                             textStyle = TextStyle(
                                 fontFamily = funnelFont,
                                 fontSize = 18.sp,
                                 color = Color(0xFFFAFAFA)
                             ),
+                            shape = RoundedCornerShape(25.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 cursorColor = Color(0xFFFAFAFA),
                                 focusedBorderColor = Color(0xFFA5A5A5),
