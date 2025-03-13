@@ -1,12 +1,16 @@
 package com.example.herewegooo
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -14,16 +18,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -37,12 +45,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,22 +76,21 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+
 @Composable
-fun MyDialog(
+fun BookingDialog(
     openDialog: Boolean,
     onDismiss: () -> Unit,
     roomNumber: String,
     user: UserViewModel,
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
-    val snackbarType = remember { mutableStateOf(SnackbarType.SUCCESS) }
     val coroutineScope = rememberCoroutineScope()
-
     var expanded by remember { mutableStateOf(false) }
 
+    // Date selection
     val todayKey = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
     val dateOptions = remember(todayKey) {
-        // Recomputes only when todayKey changes (daily)
         (0 until 10).map { offset ->
             LocalDate.now()
                 .plusDays(offset.toLong())
@@ -85,10 +99,10 @@ fun MyDialog(
     }
     var selectedDate by remember { mutableStateOf(dateOptions.firstOrNull() ?: "Select Date") }
 
+    // Time selection state
     var fromHourEntry by remember { mutableStateOf("") }
     var fromMinuteEntry by remember { mutableStateOf("") }
     var fromMeridianEntry by remember { mutableStateOf("AM") }
-
     var toHourEntry by remember { mutableStateOf("") }
     var toMinuteEntry by remember { mutableStateOf("") }
     var toMeridianEntry by remember { mutableStateOf("AM") }
@@ -99,622 +113,335 @@ fun MyDialog(
     if (openDialog) {
         Dialog(onDismissRequest = onDismiss) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF131315),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF1F1F23),
                 modifier = Modifier
                     .padding(16.dp)
                     .width(400.dp)
                     .height(750.dp)
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(16.dp))
             ) {
-                Column(modifier = Modifier.padding(0.dp)) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Modern gradient header
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp)
-                            .background(Color(0xFF1F2933))
+                            .height(80.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF4A6572),
+                                        Color(0xFF344955)
+                                    )
+                                )
+                            )
                     ) {
-                        Text(
-                            text = "Book your slot",
-                            modifier = Modifier.align(Alignment.Center),
-                            fontSize = 28.sp,
-                            fontFamily = oswaldFont,
-                            color = Color.White
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.schedule),
+                                contentDescription = "Book Slot",
+//                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "Book Your Slot",
+                                modifier = Modifier,
+                                fontSize = 26.sp,
+                                fontFamily = oswaldFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
                     }
 
-                    Column {
-                        InfoField(
-                            label = "Room No",
+                    // Form content with scroll capability
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        // Room Number
+                        ModernInfoField(
+                            label = "Room Number",
                             value = roomNumber,
-                            modifier = Modifier
-                                .offset(x = 15.dp, y = 10.dp)
-                                .width(260.dp)
-                                .height(70.dp)
+                            painter = painterResource(id = R.drawable.room)
                         )
 
-                        Box(
+                        // Date Selection
+                        Column(
                             modifier = Modifier
-                                .offset(x = 15.dp, y = 21.dp)
-                                .width(260.dp)
-                                .height(70.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1C1C1E))
-//                                .clickable { expanded = true } // Toggle dropdown on click
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF2A2A2E))
+                                .padding(16.dp)
                         ) {
-                            // Display a label and the currently selected date
-                            Text(
-                                text = "Date",
-                                fontFamily = karlaFont,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.offset(x = 10.dp, y = 5.dp),
-                                color = Color(0xFF77767b)
-                            )
-                            Text(
-                                text = selectedDate,
-                                fontFamily = funnelFont,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 30.sp,
-                                modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-                                color = Color(0xFFF0F0F5)
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 10.dp, y = 70.dp)
-//                                .clip(RoundedCornerShape(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                DropdownMenu(
-                                    modifier = Modifier
-                                        .width(240.dp)
-//                                    .offset(20.dp)
-                                        .background(Color(0xFF1C1C1E))
-                                        .align(Alignment.Center),
-                                    expanded = expanded && dateOptions.isNotEmpty(),
-                                    onDismissRequest = { expanded = false }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    val itemHeight = 48.dp // Approximate height of DropdownMenuItem
-                                    val maxHeight = 250.dp
-                                    val totalHeight =
-                                        (dateOptions.size * itemHeight).coerceAtMost(maxHeight)
-
-                                    Box(
-                                        modifier = Modifier
-                                            .height(totalHeight)
-                                            .verticalScroll(rememberScrollState())
-                                    ) {
-                                        Column {
-                                            dateOptions.forEach { date ->
-                                                DropdownMenuItem(
-                                                    onClick = {
-                                                        selectedDate = date
-                                                        expanded = false
-                                                    },
-                                                    text = {
-                                                        Text(
-                                                            text = date,
-                                                            color = Color.White,
-                                                            fontFamily = funnelFont,
-                                                            fontSize = 20.sp,
-                                                            modifier = Modifier.offset(x = 60.dp)
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                        }
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.calendartoda),
+                                        contentDescription = "Date",
+                                        tint = Color(0xFF64B5F6),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            text = "Date",
+                                            fontFamily = karlaFont,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF8F8F96)
+                                        )
+                                        Text(
+                                            text = selectedDate,
+                                            fontFamily = funnelFont,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 24.sp,
+                                            color = Color.White
+                                        )
                                     }
                                 }
+
+                                IconButton(
+                                    onClick = { expanded = true },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(
+                                            color = Color(0xFF3A3A3F),
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Select Date",
+                                        tint = Color.White
+                                    )
+                                }
                             }
-                            Button(
+
+                            // Date dropdown menu
+                            DropdownMenu(
                                 modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .offset(x = 110.dp, y = 5.dp)
-                                    .width(30.dp),
-                                onClick = {
-                                    expanded = true
-                                },
-                                contentPadding = PaddingValues(0.dp),
-                                shape = RectangleShape,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                ),
+                                    .width(300.dp)
+                                    .background(Color(0xFF2A2A2E)),
+                                expanded = expanded && dateOptions.isNotEmpty(),
+                                onDismissRequest = { expanded = false }
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "DropdownArrow",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        }
+                                val itemHeight = 48.dp
+                                val maxHeight = 250.dp
+                                val totalHeight =
+                                    (dateOptions.size * itemHeight).coerceAtMost(maxHeight)
 
-                        Box(
-                            modifier = Modifier
-                                .offset(x = 15.dp, y = 32.dp)
-                                .width(260.dp)
-                                .height(90.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1C1C1E))
-                        ) {
-                            // Display a label and the currently selected date
-                            Text(
-                                text = "From",
-                                fontFamily = karlaFont,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.offset(x = 10.dp, y = 5.dp),
-                                color = Color(0xFF77767b)
-                            )
-                            Row {
                                 Box(
                                     modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
+                                        .height(totalHeight)
+                                        .verticalScroll(rememberScrollState())
                                 ) {
-                                    OutlinedTextField(
-                                        value = fromHourEntry,
-                                        onValueChange = { newValue ->
-                                            // Allow if the input is empty or only contains digits
-                                            if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                                fromHourEntry = newValue
-
-                                                // Optionally, only validate if exactly 2 digits are entered:
-                                                if (newValue.length == 2) {
-                                                    val intVal = newValue.toIntOrNull()
-                                                    if (intVal == null || intVal !in 1 until 13) {
-                                                        fromHourEntry = ""
-                                                    }
+                                    Column {
+                                        dateOptions.forEach { date ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    selectedDate = date
+                                                    expanded = false
+                                                },
+                                                text = {
+                                                    Text(
+                                                        text = date,
+                                                        color = Color.White,
+                                                        fontFamily = funnelFont,
+                                                        fontSize = 18.sp
+                                                    )
                                                 }
-                                            }
-                                        },
-                                        placeholder = {
-                                            Text(
-                                                text = "HH",
-                                                fontFamily = funnelFont,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 24.sp,
-                                                color = Color(0xFF77767b)
                                             )
-                                        },
-                                        textStyle = TextStyle(
-                                            fontFamily = funnelFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 25.sp,
-                                            color = Color(0xFFFAFAFA)
-                                        ),
-                                        modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            disabledPlaceholderColor = Color(0xFF77767b),
-                                            unfocusedPlaceholderColor = Color(0xFF77767b),
-                                            focusedPlaceholderColor = Color.Black,
-                                            focusedTextColor = Color(0xFFFAFAFA),
-                                            unfocusedTextColor = Color(0xFFFAFAFA),
-                                            cursorColor = Color(0xFF77767b),
-                                            focusedBorderColor = Color(0xFF77767b)
-                                        ),
-                                        keyboardOptions = KeyboardOptions.Default.copy(
-                                            keyboardType = KeyboardType.Number
-                                        )
-                                    )
-                                }
-                                Text(
-                                    text = ":",
-                                    fontFamily = funnelFont,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 40.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.offset(x = 13.dp, y = 25.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
-                                        .offset(x = 5.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = fromMinuteEntry,
-                                        onValueChange = { newValue ->
-                                            // Allow if the input is empty or only contains digits
-                                            if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                                fromMinuteEntry = newValue
-
-                                                // Optionally, only validate if exactly 2 digits are entered:
-                                                if (newValue.length == 2) {
-                                                    val intVal = newValue.toIntOrNull()
-                                                    if (intVal == null || intVal !in 0 until 60) {
-                                                        fromMinuteEntry = ""
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        placeholder = {
-                                            Text(
-                                                text = "MM",
-                                                fontFamily = funnelFont,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 24.sp,
-                                                color = Color(0xFF77767b)
-                                            )
-                                        },
-                                        textStyle = TextStyle(
-                                            fontFamily = funnelFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 25.sp,
-                                            color = Color(0xFFFAFAFA)
-                                        ),
-                                        modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            disabledPlaceholderColor = Color(0xFF77767b),
-                                            unfocusedPlaceholderColor = Color(0xFF77767b),
-                                            focusedPlaceholderColor = Color.Black,
-                                            focusedTextColor = Color(0xFFFAFAFA),
-                                            unfocusedTextColor = Color(0xFFFAFAFA),
-                                            cursorColor = Color(0xFF77767b),
-                                            focusedBorderColor = Color(0xFF77767b)
-                                        ),
-                                        keyboardOptions = KeyboardOptions.Default.copy(
-                                            keyboardType = KeyboardType.Number
-                                        )
-                                    )
-                                }
-                                Text(
-                                    text = ":",
-                                    fontFamily = funnelFont,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 40.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.offset(x = 18.dp, y = 25.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
-                                        .offset(x = 19.dp, y = 25.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = Color(0xFF77767b),
-                                            shape = RoundedCornerShape(5.dp)
-                                        )
-
-                                ) {
-                                    var meridianExpanded by remember { mutableStateOf(false) }
-                                    Text(
-                                        text = fromMeridianEntry,
-                                        fontFamily = funnelFont,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 25.sp,
-                                        modifier = Modifier
-//                                            .offset(x = 15.dp, y = 25.dp)
-                                            .clickable { meridianExpanded = true }
-                                            .align(Alignment.Center),
-                                        color = Color(0xFFFAFAFA)
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .offset(x = 7.dp, y = 65.dp)
-                                    ) {
-                                        val itemHeight =
-                                            48.dp // Approximate height of DropdownMenuItem
-                                        val maxHeight = itemHeight * 2
-                                        DropdownMenu(
-                                            modifier = Modifier
-                                                .width(70.dp)
-                                                .background(Color(0xFF1C1C1E))
-                                                .align(Alignment.Center),
-                                            expanded = meridianExpanded,
-                                            onDismissRequest = { meridianExpanded = false }
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .height(maxHeight)
-                                                    .verticalScroll(rememberScrollState())
-                                            ) {
-                                                Column {
-                                                    listOf("AM", "PM").forEach { timePeriod ->
-                                                        DropdownMenuItem(
-                                                            onClick = {
-                                                                fromMeridianEntry = timePeriod
-                                                                meridianExpanded = false
-                                                            },
-                                                            text = {
-                                                                Text(
-                                                                    text = timePeriod,
-                                                                    color = Color.White,
-                                                                    fontFamily = funnelFont,
-                                                                    fontSize = 20.sp,
-                                                                    modifier = Modifier.offset(x = 8.dp)
-                                                                )
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
                                         }
                                     }
                                 }
                             }
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .offset(x = 15.dp, y = 43.dp)
-                                .width(260.dp)
-                                .height(90.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1C1C1E))
-                        ) {
-                            // Display a label and the currently selected date
-                            Text(
-                                text = "To",
-                                fontFamily = karlaFont,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.offset(x = 10.dp, y = 5.dp),
-                                color = Color(0xFF77767b)
-                            )
-                            Row {
-                                Box(
-                                    modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = toHourEntry,
-                                        onValueChange = { newValue ->
-                                            // Allow if the input is empty or only contains digits
-                                            if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                                toHourEntry = newValue
+                        // From Time Selection
+                        ModernTimeSelection(
+                            label = "From",
+                            icon = painterResource(id = R.drawable.schedule),
+                            hourValue = fromHourEntry,
+                            onHourChange = { newValue ->
+                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                    fromHourEntry = newValue
 
-                                                // Optionally, only validate if exactly 2 digits are entered:
-                                                if (newValue.length == 2) {
-                                                    val intVal = newValue.toIntOrNull()
-                                                    if (intVal == null || intVal !in 1 until 13) {
-                                                        toHourEntry = ""
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        placeholder = {
-                                            Text(
-                                                text = "HH",
-                                                fontFamily = funnelFont,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 24.sp,
-                                                color = Color(0xFF77767b)
-                                            )
-                                        },
-                                        textStyle = TextStyle(
-                                            fontFamily = funnelFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 25.sp,
-                                            color = Color(0xFFFAFAFA)
-                                        ),
-                                        modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            disabledPlaceholderColor = Color(0xFF77767b),
-                                            unfocusedPlaceholderColor = Color(0xFF77767b),
-                                            focusedPlaceholderColor = Color.Black,
-                                            focusedTextColor = Color(0xFFFAFAFA),
-                                            unfocusedTextColor = Color(0xFFFAFAFA),
-                                            cursorColor = Color(0xFF77767b),
-                                            focusedBorderColor = Color(0xFF77767b)
-                                        ),
-                                        keyboardOptions = KeyboardOptions.Default.copy(
-                                            keyboardType = KeyboardType.Number
-                                        )
-                                    )
-                                }
-                                Text(
-                                    text = ":",
-                                    fontFamily = funnelFont,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 40.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.offset(x = 13.dp, y = 25.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
-                                        .offset(x = 5.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = toMinuteEntry,
-                                        onValueChange = { newValue ->
-                                            // Allow if the input is empty or only contains digits
-                                            if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                                toMinuteEntry = newValue
-
-                                                // Optionally, only validate if exactly 2 digits are entered:
-                                                if (newValue.length == 2) {
-                                                    val intVal = newValue.toIntOrNull()
-                                                    if (intVal == null || intVal !in 0 until 60) {
-                                                        toMinuteEntry = ""
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        placeholder = {
-                                            Text(
-                                                text = "MM",
-                                                fontFamily = funnelFont,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 24.sp,
-                                                color = Color(0xFF77767b)
-                                            )
-                                        },
-                                        textStyle = TextStyle(
-                                            fontFamily = funnelFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 25.sp,
-                                            color = Color(0xFFFAFAFA)
-                                        ),
-                                        modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            disabledPlaceholderColor = Color(0xFF77767b),
-                                            unfocusedPlaceholderColor = Color(0xFF77767b),
-                                            focusedPlaceholderColor = Color.Black,
-                                            focusedTextColor = Color(0xFFFAFAFA),
-                                            unfocusedTextColor = Color(0xFFFAFAFA),
-                                            cursorColor = Color(0xFF77767b),
-                                            focusedBorderColor = Color(0xFF77767b)
-                                        ),
-                                        keyboardOptions = KeyboardOptions.Default.copy(
-                                            keyboardType = KeyboardType.Number
-                                        )
-                                    )
-                                }
-                                Text(
-                                    text = ":",
-                                    fontFamily = funnelFont,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 40.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.offset(x = 18.dp, y = 25.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .width(70.dp)
-                                        .height(55.dp)
-                                        .offset(x = 19.dp, y = 25.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = Color(0xFF77767b),
-                                            shape = RoundedCornerShape(5.dp)
-                                        )
-
-                                ) {
-                                    var meridianExpanded by remember { mutableStateOf(false) }
-                                    Text(
-                                        text = toMeridianEntry,
-                                        fontFamily = funnelFont,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 25.sp,
-                                        modifier = Modifier
-//                                            .offset(x = 15.dp, y = 25.dp)
-                                            .clickable { meridianExpanded = true }
-                                            .align(Alignment.Center),
-                                        color = Color(0xFFFAFAFA)
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .offset(x = 7.dp, y = 65.dp)
-                                    ) {
-                                        val itemHeight =
-                                            48.dp // Approximate height of DropdownMenuItem
-                                        val maxHeight = itemHeight * 2
-                                        DropdownMenu(
-                                            modifier = Modifier
-                                                .width(70.dp)
-                                                .background(Color(0xFF1C1C1E))
-                                                .align(Alignment.Center),
-                                            expanded = meridianExpanded,
-                                            onDismissRequest = { meridianExpanded = false }
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .height(maxHeight)
-                                                    .verticalScroll(rememberScrollState())
-                                            ) {
-                                                Column {
-                                                    listOf("AM", "PM").forEach { timePeriod ->
-                                                        DropdownMenuItem(
-                                                            onClick = {
-                                                                toMeridianEntry = timePeriod
-                                                                meridianExpanded = false
-                                                            },
-                                                            text = {
-                                                                Text(
-                                                                    text = timePeriod,
-                                                                    color = Color.White,
-                                                                    fontFamily = funnelFont,
-                                                                    fontSize = 20.sp,
-                                                                    modifier = Modifier.offset(x = 8.dp)
-                                                                )
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
+                                    if (newValue.length == 2) {
+                                        val intVal = newValue.toIntOrNull()
+                                        if (intVal == null || intVal !in 1 until 13) {
+                                            fromHourEntry = ""
                                         }
                                     }
                                 }
-                            }
-                        }
+                            },
+                            minuteValue = fromMinuteEntry,
+                            onMinuteChange = { newValue ->
+                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                    fromMinuteEntry = newValue
 
-                        InfoField(
+                                    if (newValue.length == 2) {
+                                        val intVal = newValue.toIntOrNull()
+                                        if (intVal == null || intVal !in 0 until 60) {
+                                            fromMinuteEntry = ""
+                                        }
+                                    }
+                                }
+                            },
+                            meridianValue = fromMeridianEntry,
+                            onMeridianChange = { fromMeridianEntry = it }
+                        )
+
+                        // To Time Selection
+                        ModernTimeSelection(
+                            label = "To",
+                            icon = painterResource(id = R.drawable.schedule),
+                            iconTint = Color(0xFFFF7043),
+                            hourValue = toHourEntry,
+                            onHourChange = { newValue ->
+                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                    toHourEntry = newValue
+
+                                    if (newValue.length == 2) {
+                                        val intVal = newValue.toIntOrNull()
+                                        if (intVal == null || intVal !in 1 until 13) {
+                                            toHourEntry = ""
+                                        }
+                                    }
+                                }
+                            },
+                            minuteValue = toMinuteEntry,
+                            onMinuteChange = { newValue ->
+                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                    toMinuteEntry = newValue
+
+                                    if (newValue.length == 2) {
+                                        val intVal = newValue.toIntOrNull()
+                                        if (intVal == null || intVal !in 0 until 60) {
+                                            toMinuteEntry = ""
+                                        }
+                                    }
+                                }
+                            },
+                            meridianValue = toMeridianEntry,
+                            onMeridianChange = { toMeridianEntry = it }
+                        )
+
+                        // Faculty Info
+                        ModernInfoField(
                             label = "Faculty",
                             value = user.userName,
-                            modifier = Modifier
-                                .offset(x = 15.dp, y = 54.dp)
-                                .width(260.dp)
-                                .height(70.dp)
+                            icon = Icons.Default.Person
                         )
 
-                        Box(modifier = Modifier
-                            .width(260.dp)
-                            .height(150.dp)
-                            .offset(x = 15.dp, y = 65.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF1C1C1E))
+                        // Reason for booking
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF2A2A2E))
+                                .padding(16.dp)
                         ) {
-                            Text(
-                                text = "Reason",
-                                fontFamily = karlaFont,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.offset(x = 10.dp, y = 5.dp),
-                                color = Color(0xFF77767b)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.description),
+                                    contentDescription = "Reason",
+                                    tint = Color(0xFF81C784),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = "Reason",
+                                    fontFamily = karlaFont,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF8F8F96)
+                                )
+                            }
+
                             OutlinedTextField(
                                 value = reason,
-                                onValueChange = { newValue ->
-                                    reason = newValue
-                                },
+                                onValueChange = { reason = it },
                                 placeholder = {
                                     Text(
                                         text = "Enter reason for booking slot",
                                         fontFamily = funnelFont,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF77767b)
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF8F8F96)
                                     )
                                 },
                                 textStyle = TextStyle(
                                     fontFamily = funnelFont,
-                                    fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
-                                    color = Color(0xFFFAFAFA)
+                                    color = Color.White
                                 ),
                                 modifier = Modifier
-                                    .offset(x = 10.dp, y = 25.dp)
-                                    .width(240.dp)
-                                    .height(115.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = Color(0xFF77767b),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ),
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                                    .height(100.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    disabledPlaceholderColor = Color(0xFF77767b),
-                                    unfocusedPlaceholderColor = Color(0xFF77767b),
-                                    focusedPlaceholderColor = Color.Black,
-                                    focusedTextColor = Color(0xFFFAFAFA),
-                                    unfocusedTextColor = Color(0xFFFAFAFA),
-                                    cursorColor = Color(0xFF77767b),
-                                    focusedBorderColor = Color.Transparent,
-                                    unfocusedBorderColor = Color.Transparent
+                                    focusedBorderColor = Color(0xFF64B5F6),
+                                    unfocusedBorderColor = Color(0xFF3A3A3F),
+                                    cursorColor = Color(0xFF64B5F6),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
                                 )
                             )
                         }
                     }
 
+                    // Action buttons
                     Row(
                         modifier = Modifier
-                            .offset(y = 80.dp)
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Cancel button with updated style
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3A3A3F)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp,
+                                pressedElevation = 2.dp
+                            )
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontFamily = oswaldFont,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        // Book slot button with updated style
                         Button(
                             onClick = {
                                 val fromHour = fromHourEntry.toIntOrNull()
@@ -722,10 +449,9 @@ fun MyDialog(
                                 val toHour = toHourEntry.toIntOrNull()
                                 val toMinute = toMinuteEntry.toIntOrNull()
 
-
-                                if(fromHour == null || fromMinute == null || toHour == null || toMinute == null){
-                                    println("Invalid input!")
-                                }else {
+                                if (fromHour == null || fromMinute == null || toHour == null || toMinute == null) {
+                                    onShowSnackbar("Please enter valid times", SnackbarType.ERROR)
+                                } else {
                                     fun convertToMinutes(
                                         hour: Int,
                                         minute: Int,
@@ -753,25 +479,47 @@ fun MyDialog(
                                     val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                                     val classDate = selectedDate
                                     val bookingDate = LocalDate.parse(classDate, inputFormatter)
-                                    val finalDate = bookingDate.format(outputFormatter) // yyyy-MM-dd format
+                                    val finalDate =
+                                        bookingDate.format(outputFormatter) // yyyy-MM-dd format
 
                                     val today = LocalDate.now()
 
-                                    val startTime = getLocalTime(fromHour, fromMinute, fromMeridianEntry)
+                                    val startTime =
+                                        getLocalTime(fromHour, fromMinute, fromMeridianEntry)
                                     val endTime = getLocalTime(toHour, toMinute, toMeridianEntry)
 
+                                    // Validate booking time
+                                    when {
+                                        bookingDate.isBefore(today) -> {
+                                            onShowSnackbar(
+                                                "Cannot book for past dates",
+                                                SnackbarType.ERROR
+                                            )
+                                        }
 
-                                    if (bookingDate.isBefore(today)) {
-                                        println("Booking date is in the past!")
-                                    } else if (bookingDate.isEqual(today)) {
-                                        if (fromTotal < currentTotal) {
-                                            println("Booking start time is in the past!")
-                                        } else if (toTotal < fromTotal) {
-                                            println("Booking time mismatch!")
-                                        } else {
-                                            println("Times are valid, proceed with booking.")
+                                        bookingDate.isEqual(today) && fromTotal < currentTotal -> {
+                                            onShowSnackbar(
+                                                "Start time must be in the future",
+                                                SnackbarType.ERROR
+                                            )
+                                        }
 
-                                            println("Date format being sent: $finalDate")
+                                        toTotal <= fromTotal -> {
+                                            onShowSnackbar(
+                                                "End time must be after start time",
+                                                SnackbarType.ERROR
+                                            )
+                                        }
+
+                                        reason.isBlank() -> {
+                                            onShowSnackbar(
+                                                "Please enter a reason for booking",
+                                                SnackbarType.ERROR
+                                            )
+                                        }
+
+                                        else -> {
+                                            // Proceed with booking
                                             coroutineScope.launch {
                                                 val success = slotBookingRequest(
                                                     client,
@@ -784,31 +532,17 @@ fun MyDialog(
                                                         reason
                                                     )
                                                 )
-                                                println(success)
                                                 onDismiss()
                                                 if (success != null) {
-                                                    onShowSnackbar("Slot Requested!", SnackbarType.SUCCESS)
-                                                }else{
-                                                    onShowSnackbar("Error booking slot!", SnackbarType.ERROR)
-                                                }
-                                            }
-                                        }
-                                    }else{
-                                        if (toTotal < fromTotal) {
-                                            println("Booking time mismatch!")
-                                        } else {
-
-                                            println("Times are valid, proceed with booking.")
-                                            coroutineScope.launch {
-                                                val success = slotBookingRequest(client, sendRequest(finalDate, startTime, endTime, user.userName, roomNumber.toInt(), reason))
-                                                println(success)
-                                                onDismiss()
-                                                if (success != null) {
-                                                    snackbarType.value = SnackbarType.SUCCESS
-                                                    onShowSnackbar("Slot Requested!", SnackbarType.SUCCESS)
-                                                }else{
-                                                    snackbarType.value = SnackbarType.ERROR
-                                                    onShowSnackbar("Error booking slot!", SnackbarType.ERROR)
+                                                    onShowSnackbar(
+                                                        "Slot requested successfully!",
+                                                        SnackbarType.SUCCESS
+                                                    )
+                                                } else {
+                                                    onShowSnackbar(
+                                                        "Failed to book slot",
+                                                        SnackbarType.ERROR
+                                                    )
                                                 }
                                             }
                                         }
@@ -816,39 +550,33 @@ fun MyDialog(
                                 }
                             },
                             modifier = Modifier
-                                .width(120.dp)
-                                .height(50.dp)
-                                .offset(x = 14.dp, y = 0.dp),
-                            shape = RoundedCornerShape(10.dp),
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1B9543)
+                                containerColor = Color(0xFF1E88E5)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 2.dp,
+                                pressedElevation = 4.dp
                             )
                         ) {
-                            Text(
-                                text = "Book Slot",
-                                fontFamily = oswaldFont,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-
-                        Button(
-                            onClick = onDismiss,
-                            modifier = Modifier
-                                .width(125.dp)
-                                .height(50.dp)
-                                .offset(x = 30.dp, y = 0.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFB31212)
-                            )
-                        ) {
-                            Text(
-                                text = "Close",
-                                fontFamily = oswaldFont,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Book",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "Book Slot",
+                                    fontFamily = oswaldFont,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -858,37 +586,229 @@ fun MyDialog(
 }
 
 @Composable
-fun InfoField(
+fun ModernInfoField(
     label: String,
     value: String,
-    modifier: Modifier = Modifier,
-    labelFontSize: TextUnit = 12.sp,
-    valueFontSize: TextUnit = 30.sp,
-    containerColor: Color = Color(0xFF1C1C1E),
-    shape: Shape = RoundedCornerShape(10.dp)
+    iconTint: Color = Color(0xFF64B5F6),
+    icon: ImageVector? = null,
+    painter: Painter? = null
 ) {
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(containerColor)
-    ) {
-        Text(
-            text = label,
-            fontFamily = karlaFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = labelFontSize,
-            modifier = Modifier.offset(x = 10.dp, y = 5.dp),
-            color = Color(0xFF77767b)
-        )
-        Text(
-            text = value,
-            fontFamily = funnelFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = valueFontSize,
-            modifier = Modifier.offset(x = 10.dp, y = 25.dp),
-            color = Color(0xFFFAFAFA)
-        )
+    require(icon != null || painter != null) { "Either icon or painter must be provided" }
 
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF2A2A2E))
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            when {
+                icon != null -> Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+
+                painter != null -> Icon(
+                    painter = painter,
+                    contentDescription = label,
+                    modifier = Modifier.size(20.dp),
+                    tint = iconTint
+                )
+            }
+            Column {
+                Text(
+                    text = label,
+                    fontFamily = karlaFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = Color(0xFF8F8F96)
+                )
+                Text(
+                    text = value,
+                    fontFamily = funnelFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernTimeSelection(
+    label: String,
+    icon: Painter,
+    iconTint: Color = Color(0xFF64B5F6),
+    hourValue: String,
+    onHourChange: (String) -> Unit,
+    minuteValue: String,
+    onMinuteChange: (String) -> Unit,
+    meridianValue: String,
+    onMeridianChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF2A2A2E))
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                painter = icon,
+                contentDescription = label,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = label,
+                fontFamily = karlaFont,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = Color(0xFF8F8F96)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Hour input
+            OutlinedTextField(
+                value = hourValue,
+                onValueChange = onHourChange,
+                placeholder = {
+                    Text(
+                        text = "HH",
+                        fontFamily = funnelFont,
+                        fontSize = 16.sp,
+                        color = Color(0xFF8F8F96)
+                    )
+                },
+                textStyle = TextStyle(
+                    fontFamily = funnelFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = iconTint,
+                    unfocusedBorderColor = Color(0xFF3A3A3F),
+                    cursorColor = iconTint,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+
+            Text(
+                text = ":",
+                fontFamily = funnelFont,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                color = Color.White
+            )
+
+            // Minute input
+            OutlinedTextField(
+                value = minuteValue,
+                onValueChange = onMinuteChange,
+                placeholder = {
+                    Text(
+                        text = "MM",
+                        fontFamily = funnelFont,
+                        fontSize = 16.sp,
+                        color = Color(0xFF8F8F96)
+                    )
+                },
+                textStyle = TextStyle(
+                    fontFamily = funnelFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = iconTint,
+                    unfocusedBorderColor = Color(0xFF3A3A3F),
+                    cursorColor = iconTint,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+
+            // AM/PM selector
+            val meridianOptions = listOf("AM", "PM")
+            var meridianExpanded by remember { mutableStateOf(false) }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0xFF3A3A3F), RoundedCornerShape(4.dp))
+                    .clickable { meridianExpanded = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = meridianValue,
+                    fontFamily = funnelFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.White
+                )
+
+                DropdownMenu(
+                    expanded = meridianExpanded,
+                    onDismissRequest = { meridianExpanded = false },
+                    modifier = Modifier
+                        .width(100.dp)
+                        .background(Color(0xFF2A2A2E))
+                ) {
+                    meridianOptions.forEach { option ->
+                        DropdownMenuItem(
+                            onClick = {
+                                onMeridianChange(option)
+                                meridianExpanded = false
+                            },
+                            text = {
+                                Text(
+                                    text = option,
+                                    fontFamily = funnelFont,
+                                    fontSize = 18.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -904,19 +824,25 @@ fun getLocalTime(hour: Int, minute: Int, meridian: String): LocalTime {
 }
 
 
-
 suspend fun slotBookingRequest(
     client: SupabaseClient,
     requestList: sendRequest
-    ): Int?{
-    val insertionDataList = Request(class_date = requestList.classDate, start_time = requestList.startTime, end_time = requestList.endTime, faculty_name = requestList.facultyName, classroom_id = requestList.classroomId, reason = requestList.reason)
+): Int? {
+    val insertionDataList = Request(
+        class_date = requestList.classDate,
+        start_time = requestList.startTime,
+        end_time = requestList.endTime,
+        faculty_name = requestList.facultyName,
+        classroom_id = requestList.classroomId,
+        reason = requestList.reason
+    )
 
     return try {
         val response = client.from("requests").insert(insertionDataList) {
             select(columns = Columns.list("id"))
         }.decodeSingle<IdColumnVerify>()
         response.id
-    }catch (e: Exception){
+    } catch (e: Exception) {
         println("Error during slot booking request ${e.localizedMessage}")
         null
     }

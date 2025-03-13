@@ -1,14 +1,30 @@
 package com.example.herewegooo
 
+import android.util.Log
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
@@ -23,8 +39,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.MailOutline
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -38,115 +77,192 @@ fun BottomNavBar(
     selectedIndex: Int,
     onItemSelected: (Int, NavItem) -> Unit,
     content: @Composable () -> Unit
-){
-    println("Role: ${userViewModel.userRole}, Name: ${userViewModel.userName}")
-    val navItemList = if (userViewModel.userRole == "teacher") {
-        listOf(
+) {
+    val navItemList = when (userViewModel.userRole) {
+        "teacher" -> listOf(
             NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
             NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
             NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
-    } else if (userViewModel.userRole == "admin"){
-        listOf(
+        "admin" -> listOf(
             NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "adminPanel"),
+            NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
-    } else {
-        listOf(
+        else -> listOf(
             NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
             NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
+            NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
     }
 
-
+    // Get system insets
     val density = LocalDensity.current
-    val imeVisible = with(density) {
-        WindowInsets.ime.getBottom(this).toDp()
-    }
-    val navHeight = if (imeVisible > 0.dp) {
-        60.dp
-    }else {110.dp}
+    val windowInsets = WindowInsets.systemBars
 
-    NavigationBar(
-        modifier = Modifier.height(navHeight),
-        containerColor =
-            if (userViewModel.userRole == "admin") {
-                Color(0xFF1E1E26) // admin panel color
-            }else{
-                Color(0xFF1E1E26) // Everybody else uses this color
-            },
-        tonalElevation = 5.dp
+    // Get IME (keyboard) visibility
+    val imeVisible = WindowInsets.ime.getBottom(density) > 0
+
+    // Calculate navigation bar height (system bottom bar)
+    val systemNavBarHeight = with(density) {
+        windowInsets.getBottom(this).toDp()
+    }
+
+    // Calculate our custom nav bar height
+    val customNavBarHeight = if (imeVisible) 55.dp else 75.dp
+
+    // Define colors based on role
+    val accentColor = if (userViewModel.userRole == "admin") {
+        Color(0xFFFF3A3A) // Vivid red for admin
+    } else {
+        Color(0xFF9676DB) // Purple for others
+    }
+
+    val backgroundColor = Color(0xFF1E1E26)
+
+    // Ensure selectedIndex is within bounds
+    val safeSelectedIndex = remember(selectedIndex, navItemList.size) {
+        selectedIndex.coerceIn(0, navItemList.size - 1)
+    }
+
+    // Container that accounts for system insets
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(customNavBarHeight + systemNavBarHeight)
+            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Bottom)),
+        contentAlignment = Alignment.TopCenter
     ) {
-        navItemList.forEachIndexed { index, navItem ->
-            val isSelected = (selectedIndex == index)
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = { onItemSelected(index, navItem) },
-                icon = {
-                    if (isSelected) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .offset(y = 5.dp)
-                                .background(
-                                    if (userViewModel.userRole == "admin") Color(0xFFFF3A3A) else Color(0xFF9676DB),
-                                    shape = CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = navItem.icon,
-                                contentDescription = navItem.label,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    } else {
-                        Icon(
-                            imageVector = navItem.icon,
-                            contentDescription = navItem.label,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .offset(y = 7.dp),
-                            tint = Color.White
-                        )
-                    }
-                },
-                label = {
-                    if (isSelected) {
-                        Text(
-                            text = navItem.label,
-                            color = Color(0xFFF0F0F5),
-                            fontFamily = funnelFont,
-                            fontSize = 16.sp,
-                            modifier = Modifier.offset(y = (-5).dp)
-                        )
-                    } else {
-                        Text(
-                            text = navItem.label,
-                            color = Color(0xFFF0F0F5),
-                            fontFamily = funnelFont,
-                            fontSize = 12.sp,
-                            modifier = Modifier.offset(y = 0.dp)
-                        )
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    unselectedIconColor = Color.Transparent,
-                    unselectedTextColor = Color.White,
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color.Green,
-                    indicatorColor = Color.Transparent,
-                    disabledIconColor = Color.White
-                ),
-                modifier = if (isSelected) {
-                    if (userViewModel.userRole == "admin"){
-                        Modifier.background(Color(0xFF1C1C1E))
-                    }
-                    else {
-                        Modifier.background(Color(0xFF121218))
-                    }
-                } else {
-                    Modifier.background(Color(0xFF1E1E26))
-                }
+        // Curved card for the navigation bar
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(customNavBarHeight)
+                .padding(horizontal = 5.dp),
+            shape = RoundedCornerShape(
+                topStart = 25.dp,
+                topEnd = 25.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = backgroundColor
             )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                navItemList.forEachIndexed { index, item ->
+                    val isSelected = index == safeSelectedIndex
+
+                    // Animation values
+                    val scale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.15f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "scale"
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                if (index != safeSelectedIndex) {
+                                    Log.d("BottomNavBar", "Clicked item: ${item.label} at index: $index")
+                                    onItemSelected(index, item)
+                                }
+                            }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        // Icon with animated scale
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(if (isSelected) 40.dp else 28.dp)
+                                .scale(scale)
+                        ) {
+                            // Glow effect for selected items
+                            if (isSelected) {
+                                Canvas(modifier = Modifier.size(48.dp)) {
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                accentColor.copy(alpha = 0.3f),
+                                                accentColor.copy(alpha = 0f)
+                                            )
+                                        ),
+                                        radius = size.minDimension / 1.5f
+                                    )
+                                }
+
+                                // Selected icon with background
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .shadow(
+                                            elevation = 8.dp,
+                                            shape = CircleShape,
+                                            spotColor = accentColor
+                                        )
+                                        .background(
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    accentColor,
+                                                    accentColor.copy(alpha = 0.8f)
+                                                ),
+                                                start = Offset(0f, 0f),
+                                                end = Offset(0f, 40f)
+                                            ),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.label,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = Color.White
+                                    )
+                                }
+                            } else {
+                                // Unselected icon
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = Color.White.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+
+                        // Animated text size
+                        val textSize by animateFloatAsState(
+                            targetValue = if (isSelected) 14f else 12f,
+                            label = "textSize"
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = item.label,
+                            color = Color(0xFFF0F0F5),
+                            fontFamily = funnelFont,
+                            fontSize = textSize.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
         }
     }
+
+    // Display the content
+    content()
 }

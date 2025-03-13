@@ -567,7 +567,7 @@ fun WeInRoom(
 
     // Booking dialog
     if (showDialog) {
-        MyDialog(
+        BookingDialog(
             openDialog = true,
             onDismiss = { showDialog = false },
             roomNumber = room,

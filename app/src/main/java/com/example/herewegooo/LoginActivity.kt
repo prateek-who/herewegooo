@@ -1,6 +1,7 @@
 package com.example.herewegooo
 
 import android.net.http.NetworkException
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -69,6 +70,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresExtension
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -637,7 +639,7 @@ private fun handleLogin(
                     }
 
                     val user = client.from("users")
-                        .select(Columns.list("role, username")) {
+                        .select(Columns.list("role, username", "profile_pic", "join_date")) {
                             filter {
                                 eq("user_id", userId)
                             }
@@ -645,6 +647,8 @@ private fun handleLogin(
 
                     userViewModel.userRole = user.role
                     userViewModel.userName = user.username
+                    userViewModel.profilePic = user.profile_pic
+                    userViewModel.joinDate = user.join_date
 
                     val destination = if (user.role == "admin") "adminPanel" else "home"
                     navController.navigate(route = destination) {

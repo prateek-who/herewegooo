@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,9 +20,10 @@ fun AppNavigate(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     userViewModel: UserViewModel,
-    onShowSnackbar: (message: String, type: SnackbarType) -> Unit
+    onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
 ){
     val easeIn = 1000
+    var loginReset = Int
 
     NavHost(
         navController = navController,

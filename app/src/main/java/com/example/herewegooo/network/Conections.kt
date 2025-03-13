@@ -27,7 +27,9 @@ import java.time.LocalTime
 @Serializable
 data class ProfileRole(
     val role: String,
-    val username: String
+    val username: String,
+    val profile_pic: String,
+    val join_date: String
 )
 
 @Serializable

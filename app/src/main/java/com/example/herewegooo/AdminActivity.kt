@@ -4,6 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,16 +41,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -54,19 +70,26 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.ModifierInfo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
@@ -95,12 +118,17 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.sql.Date
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun AdminPanel(
@@ -108,46 +136,182 @@ fun AdminPanel(
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
     val client = supabaseClient()
+    var refreshCounter by remember { mutableIntStateOf(0) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    var lastRefreshTime by remember { mutableLongStateOf(0L) }
+    var requests by remember { mutableStateOf<List<ReceiveRequests>>(emptyList()) }
 
-    var refreshCounter by remember { mutableStateOf(0) }
+    // Add a rotation animation state
+    var rotationAngle by remember { mutableFloatStateOf(0f) }
+    val rotation = remember { Animatable(rotationAngle) }
 
-    val requestsState = produceState<List<ReceiveRequests>?>(initialValue = null, client, refreshCounter) {
-        value = getRequests(client)
+    LaunchedEffect(refreshCounter) {
+        // Start the rotation animation
+        rotation.animateTo(
+            targetValue = rotationAngle + 360f,
+            animationSpec = tween(
+                durationMillis = 800,
+                easing = FastOutSlowInEasing
+            )
+        )
+        // Update the base rotation angle after animation completes
+        rotationAngle += 360f
+
+        val currentTime = System.currentTimeMillis()
+        // Only refresh if at least 30 seconds have passed since last refresh
+        if (currentTime - lastRefreshTime > 30000 || lastRefreshTime == 0L) {
+            isRefreshing = true
+            try {
+                // Update lastRefreshTime
+                requests = getRequests(client)
+                lastRefreshTime = currentTime
+            } catch (e: Exception) {
+                onShowSnackbar("Failed to fetch requests: ${e.localizedMessage}", SnackbarType.ERROR)
+            } finally {
+                isRefreshing = false
+            }
+        }
     }
 
-    val requests = requestsState.value ?: emptyList()
-
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF131315))
+            .background(Color(0xFF121214))
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color(0xFFFF3A3A))
-        ) {
-            Text(
-                text = "ADMIN PANEL",
-                color = Color(0xFFEAEAEA),
-                fontFamily = oswaldFont,
-                fontSize = 80.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Modern header with gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+//                                Color(0xFFD81F26),
+//                                Color(0xFFFF5757))
+                                Color(0xFFFFCC80),
+                                Color(0xFFFFE0B2), // Pale orange-cream
+                            )
+                        )
+                    )
+                    .shadow(elevation = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.adminpanelsettings),
+                            contentDescription = "Admin",
+//                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Text(
+                            text = "ADMIN PANEL",
+                            color = Color.White,
+                            fontFamily = oswaldFont,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                    }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-        ) {
-            items(requests) { request ->
-                RequestItem(
-                    request,
-                    onShowSnackbar,
-                    onRefresh = { refreshCounter++ }
-                )
+                    IconButton(
+                        onClick = { refreshCounter++ },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.2f), shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Refresh,
+                            contentDescription = "Refresh",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .rotate(rotation.value) // Apply the rotation here
+                        )
+                    }
+                }
+            }
+
+            // Status bar showing pending requests count
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF1D1D20))
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Pending Requests (${requests.size})",
+                        color = Color.White,
+                        fontFamily = karlaFont,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    if (isRefreshing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+//                        delay(500)
+                    }
+                }
+            }
+
+            // Request list
+            if (requests.isEmpty() && !isRefreshing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF3F3F46),
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Text(
+                            text = "No pending requests",
+                            color = Color(0xFF9E9E9E),
+                            fontFamily = karlaFont,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(requests) { request ->
+                        RequestItem(
+                            request = request,
+                            onShowSnackbar = onShowSnackbar,
+                            onRefresh = { refreshCounter++ }
+                        )
+                    }
+                }
             }
         }
     }
@@ -159,182 +323,269 @@ fun RequestItem(
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
     onRefresh: () -> Unit
 ) {
-    val smallColor = Color(0xFF77767b)
-    val bigColor = Color(0xFFF0F0F5)
+    var showApproveDialog by remember { mutableStateOf(false) }
+    var showDenyDialog by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
-    var showDialog by remember { mutableStateOf(false) }
-    var showDenyDialoge by remember { mutableStateOf(false) }
+    val textColorSecondary = Color(0xFFABABAF)
+    val textColorPrimary = Color(0xFFF5F5F7)
 
     val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a")
 
-    val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val outputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-    val parsedDate = LocalDate.parse(request.class_date, inputFormatter)
-    val formattedDate = parsedDate.format(outputFormatter)
+    // Format dates
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)
+    val parsedDate = LocalDate.parse(request.class_date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    val formattedDate = parsedDate.format(dateFormatter)
 
-    val createdInputFormatter = DateTimeFormatter.ISO_DATE_TIME
-    val createdOutputFormatterDate = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-    val createdOutputFormatterTime = DateTimeFormatter.ofPattern("HH:mma")
+    //Time shit
+    val createdDateTime = LocalDateTime.parse(request.request_created, DateTimeFormatter.ISO_DATE_TIME)
+    val istZone = ZoneId.of("Asia/Kolkata")
+    val utcZone = ZoneId.of("UTC")
 
-    val dateTime = LocalDateTime.parse(request.request_created, createdInputFormatter)
-    val formattedDateRequest = dateTime.format(createdOutputFormatterDate)
-    val formattedTimeRequest = dateTime.format(createdOutputFormatterTime)
+    val createdZonedDateTime = createdDateTime.atZone(utcZone).withZoneSameInstant(istZone)
 
-    val spaceHeight = 7.dp
+    //Final conversion of date and time
+    val formattedCreatedDate = createdZonedDateTime.format(dateFormatter)
+    val formattedCreatedTime = createdZonedDateTime.format(timeFormatter)
+
+    val isToday = parsedDate.isEqual(LocalDate.now())
+    val isTomorrow = parsedDate.isEqual(LocalDate.now().plusDays(1))
+    val dateLabel = when {
+        isToday -> "Today"
+        isTomorrow -> "Tomorrow"
+        else -> formattedDate
+    }
 
     Card(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E1E22)
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1C1C1E)
-        )
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row {
-                Column {
-                    Text(
-                        text = "Date",
-                        fontFamily = oswaldFont,
-                        fontSize = 14.sp,
-                        color = smallColor
-                    )
-                    Text(
-                        text = formattedDate,
-                        fontFamily = karlaFont,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = bigColor
-                    )
+            // Header section with date and classroom
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = if (isToday) Color(0xFFFF0A0A) else Color(0xFF2C2C30),
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = if (isToday || isTomorrow) dateLabel else parsedDate.dayOfMonth.toString(),
+                                color = Color.White,
+                                fontFamily = karlaFont,
+                                fontSize = if (isToday || isTomorrow) 16.sp else 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (!isToday && !isTomorrow) {
+                                Text(
+                                    text = parsedDate.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
+                                    color = Color.White,
+                                    fontFamily = karlaFont,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "${request.start_time.format(timeFormatter)} - ${request.end_time.format(timeFormatter)}",
+                            color = textColorPrimary,
+                            fontFamily = karlaFont,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Classroom ${request.classroom_id}",
+                            color = textColorSecondary,
+                            fontFamily = karlaFont,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
-                Column (modifier = Modifier.offset(x = 100.dp)){
-                    Text(
-                        text = "Classroom",
-                        fontFamily = oswaldFont,
-                        fontSize = 14.sp,
-                        color = smallColor
-                    )
-                    Text(
-                        text = request.classroom_id.toString(),
-                        fontFamily = karlaFont,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = bigColor
+
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = Color(0xFF2C2C30),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Show less" else "Show more",
+                        tint = textColorSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(spaceHeight))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Time",
-                fontFamily = oswaldFont,
-                fontSize = 14.sp,
-                color = smallColor
-            )
-            Text(
-                text = "${request.start_time.format(timeFormatter)} - ${request.end_time.format(timeFormatter)}",
-                fontFamily = karlaFont,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = bigColor
-            )
+            // Faculty name with icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = null,
+                    tint = textColorSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = request.faculty_name,
+                    color = textColorPrimary,
+                    fontFamily = karlaFont,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
-            Spacer(modifier = Modifier.height(spaceHeight))
+            // Expandable content
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    HorizontalDivider(color = Color(0xFF2C2C30), thickness = 1.dp)
 
-            Text(
-                text = "Faculty",
-                fontFamily = oswaldFont,
-                fontSize = 14.sp,
-                color = smallColor
-            )
-            Text(
-                text = request.faculty_name,
-                fontFamily = karlaFont,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = bigColor
-            )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(spaceHeight))
+                    // Reason
+                    Column {
+                        Text(
+                            text = "REASON",
+                            color = textColorSecondary,
+                            fontFamily = oswaldFont,
+                            fontSize = 12.sp,
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = request.reason,
+                            color = textColorPrimary,
+                            fontFamily = karlaFont,
+                            fontSize = 16.sp,
+                            lineHeight = 24.sp
+                        )
+                    }
 
-            Text(
-                text = "Reason",
-                fontFamily = oswaldFont,
-                fontSize = 14.sp,
-                color = smallColor
-            )
-            Text(
-                text = request.reason,
-                fontFamily = karlaFont,
-                fontSize = 26.sp,
-                color = bigColor
-            )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(spaceHeight))
-
-            Text(
-                text = "Requested on",
-                fontFamily = oswaldFont,
-                fontSize = 14.sp,
-                color = smallColor
-            )
-            Text(
-                text = "$formattedDateRequest  at  $formattedTimeRequest",
-                fontFamily = karlaFont,
-                fontSize = 26.sp,
-                color = bigColor
-            )
-
-            Row{
-                Button(
-                    onClick = {
-                        showDenyDialoge = true
-                    },
-                    modifier = Modifier
-                        .offset(x = 0.dp, y = 10.dp)
-                        .width(165.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFB31212)
-                    )
-                ) {
-                    Text(
-                        text = "Deny",
-                        fontFamily = karlaFont,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = bigColor
-                    )
-                }
-                Button(
-                    onClick = {
-                        showDialog = true
-                    },
-                    modifier = Modifier
-                        .offset(x = 10.dp, y = 10.dp)
-                        .width(170.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1B9543)
-                    )
-                ) {
-                    Text(
-                        text = "Approve",
-                        fontFamily = karlaFont,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = bigColor
-                    )
+                    // Request timestamp
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.schedule),
+                            contentDescription = null,
+//                            tint = textColorSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        println(timeFormatter)
+                        Text(
+                            text = "Requested on $formattedCreatedDate at $formattedCreatedTime",
+                            color = textColorSecondary,
+                            fontFamily = karlaFont,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
-            if (showDialog){
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { showDenyDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2C2C30),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = null,
+                            tint = Color(0xFFFF453A),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Deny",
+                            fontFamily = karlaFont,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { showApproveDialog = true },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF30D158),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Approve",
+                            fontFamily = karlaFont,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // Dialogs
+            if (showApproveDialog) {
                 AdminDialogue(
                     openDialog = true,
                     onDismiss = {
-                        showDialog = false
+                        showApproveDialog = false
                         onRefresh()
-                                },
+                    },
                     bookingDate = request.class_date,
                     roomNumber = request.classroom_id.toString(),
                     fromTime = request.start_time,
@@ -343,13 +594,14 @@ fun RequestItem(
                     onShowSnackbar = onShowSnackbar
                 )
             }
-            if (showDenyDialoge){
+
+            if (showDenyDialog) {
                 AdminDenyDialogue(
                     openDialog = true,
                     onDismiss = {
-                        showDenyDialoge = false
+                        showDenyDialog = false
                         onRefresh()
-                                },
+                    },
                     bookingDate = request.class_date,
                     roomNumber = request.classroom_id.toString(),
                     fromTime = request.start_time,
@@ -363,8 +615,7 @@ fun RequestItem(
 }
 
 suspend fun getRequests(client: SupabaseClient): List<ReceiveRequests> {
-    val rawList =
-        client.from("requests").select(columns = Columns.ALL).decodeList<ReceiveRequests>()
+    val rawList = client.from("requests").select(columns = Columns.ALL).decodeList<ReceiveRequests>()
 
     return rawList
 }

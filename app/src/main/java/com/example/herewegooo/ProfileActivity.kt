@@ -1,5 +1,7 @@
 package com.example.herewegooo
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,26 +28,48 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import coil3.ImageLoader
+import coil3.compose.AsyncImage
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.util.CoilUtils
 import com.example.herewegooo.data.model.UserViewModel
+import com.example.herewegooo.network.supabaseClient
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.SignOutScope
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import java.net.URI
+import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.Period
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
+import kotlin.math.exp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -56,11 +80,18 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
     val textColor = Color(0xFFF0F0F5)
     // Accent color - one of the pastel colors
     val accentColor = Color(0xFF9676DB)
+    // Red color for signout
+    val signOutColor = Color(0xFFDB7676)
 
     val subjectList = listOf("Computer Network", "Computer Forensics", "Fundamentals of Information Security", "Data Structures and Algorithms")
     val classCount = 5
     val favoutireQuote = "The only way to do great work is to love what you do. - Steve Jobs"
 
+    val client = supabaseClient()
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val experience = experinceCalculator(user = userViewModel)
 
     Column(
         modifier = Modifier
@@ -82,20 +113,28 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                     .border(width = 3.dp, color = accentColor, shape = CircleShape)
                     .align(Alignment.BottomCenter)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.sanjeevpic),
-                    contentDescription = "Sanjeev profile pic",
+                val imageLoader = ImageLoader.Builder(context)
+                    .components{
+                        add(
+                            OkHttpNetworkFetcherFactory(
+                                callFactory = {
+                                    OkHttpClient.Builder()
+                                        .followRedirects(true)
+                                        .build()
+                                }
+                            )
+                        )
+                    }
+                    .build()
+
+                AsyncImage(
+                    model = userViewModel.profilePic,
+                    imageLoader = imageLoader,
+                    contentDescription = "Profile picture",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    error = painterResource(id = R.drawable.default_profil)
                 )
-                // If using Coil for image loading
-//                AsyncImage(
-//                    model = userViewModel.profilePicUrl,
-//                    contentDescription = "Profile picture",
-//                    contentScale = ContentScale.Crop,
-//                    modifier = Modifier.fillMaxSize(),
-//                    error = painterResource(id = R.drawable.default_profile)
-//                )
 
                 // Camera icon for updating profile pic
                 Box(
@@ -105,7 +144,7 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                         .background(accentColor)
                         .border(width = 2.dp, color = backgroundColor, shape = CircleShape)
                         .align(Alignment.BottomEnd)
-                        .clickable { /* Handle click */ }
+//                        .clickable { /* Handle click */ }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
@@ -134,7 +173,7 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
             )
 
             Text(
-                text = userViewModel.userRole.capitalize(Locale.ROOT),
+                text = userViewModel.userRole.replaceFirstChar{ it.uppercase() },
                 fontFamily = karlaFont,
                 fontSize = 16.sp,
                 color = textColor.copy(alpha = 0.8f),
@@ -178,7 +217,7 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                         .background(Color.Gray.copy(alpha = 0.3f))
                 )
 
-                StatItem(title = "Experience", value = "4 yrs", textColor = textColor)
+                StatItem(title = "Experience", value = if (experience.years > 0) "${experience.years}y ${experience.months}m" else "${experience.months}m", textColor = textColor)
             }
         }
 
@@ -215,10 +254,10 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                 )
 
                 subjectList.forEachIndexed { index, subject ->
-                        SubjectChip(
-                            subject = subject,
-                            color = pastelColors[index % pastelColors.size]
-                        )
+                    SubjectChip(
+                        subject = subject,
+                        color = pastelColors[index % pastelColors.size]
+                    )
                 }
             }
         }
@@ -273,6 +312,60 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
         }
 
         Spacer(modifier = Modifier.height(40.dp))
+
+        // Cool Sign Out Button
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clickable {
+                    coroutineScope.launch {
+                        try {
+                            signoutUser(client)
+
+                            userViewModel.resetUserState()
+                            // Navigate to login screen after successful logout
+                            navController.navigate("starthere") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                            Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Failed to sign out: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E1E26)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Sign Out",
+                    tint = signOutColor,
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Sign Out",
+                    color = signOutColor,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = karlaFont
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
@@ -314,6 +407,22 @@ fun SubjectChip(subject: String, color: Color) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
+}
+
+fun experinceCalculator(user: UserViewModel): Period {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val joinDate = LocalDate.parse(user.joinDate, formatter)
+    val currentDate = LocalDate.now()
+
+    val experience = Period.between(joinDate, currentDate)
+
+    println(experience)
+
+    return experience
+}
+
+suspend fun signoutUser(client: SupabaseClient){
+    client.auth.signOut(SignOutScope.GLOBAL)
 }
 
 // Example of what UserViewModel might look like

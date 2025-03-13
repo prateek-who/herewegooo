@@ -47,6 +47,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -113,50 +116,52 @@ val stixtwoFont = FontFamily(
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val insetsController = WindowInsetsControllerCompat(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-
-//        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
-////            val currentTime = System.currentTimeMillis()
-////            if (currentTime - lastInsetsUpdate > debounceDelay) {
-//                if (insets.isVisible(WindowInsetsCompat.Type.navigationBars())
-//                    || insets.isVisible(WindowInsetsCompat.Type.statusBars())
-//                ) {
-////                binding.toggleFullscreenButton.setOnClickListener {
-//                    insetsController.hide(WindowInsetsCompat.Type.navigationBars())
-//                    insets.getInsets(WindowInsetsCompat.Type.navigationBars().toColor())
-//                    if (currentFocus == null) {
-//                        insetsController.hide(WindowInsetsCompat.Type.ime())
-//                    }
-////                }
-//                } else {
-////                binding.toggleFullscreenButton.setOnClickListener {
-//                    insetsController.show(WindowInsetsCompat.Type.navigationBars())
-//                    if (currentFocus != null) {
-//                        insetsController.show(WindowInsetsCompat.Type.ime())
-//                    }
-////                }
-//            }
-//            ViewCompat.onApplyWindowInsets(view, insets)
-//        }
-
         insetsController.isAppearanceLightStatusBars = false
-//        insetsController.hide(WindowInsetsCompat.Type.systemBars())
-//        insetsController.hide(WindowInsetsCompat.Type.navigationBars())
-//        WindowInsetsCompat.Type.navigationBars()
 
         setContent {
             HerewegoooTheme {
                 val navController = rememberNavController()
                 val userViewModel: UserViewModel = viewModel()
 
-                var selectedIndex by remember { mutableIntStateOf(0) }
-
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+
+                val selectedIndex = remember { mutableIntStateOf(0) }
+
+                // Create a mapping of routes to indices for easier reference
+                val routeToIndexMap = remember(userViewModel.userRole) {
+                    if (userViewModel.userRole == "admin") {
+                        mapOf(
+                            "adminPanel" to 0,
+                            "Profile" to 1
+                        )
+                    } else {
+                        mapOf(
+                            "Home" to 0,
+                            "Timetable" to 1,
+                            "Profile" to 2
+                        )
+                    }
+                }
+
+                // Update the selectedIndex whenever the route changes
+                LaunchedEffect(currentRoute) {
+                    currentRoute?.let { route ->
+                        if (route != "starthere") {
+                            if (userViewModel.index == 0) {
+                                selectedIndex.intValue = 0
+                                userViewModel.index += 1
+                            }else {
+                                routeToIndexMap[route]?.let { index ->
+                                    selectedIndex.intValue = index
+                                }
+                            }
+                        }
+                    }
+                }
 
                 val snackbarType = remember { mutableStateOf(SnackbarType.SUCCESS) }
                 val snackbarHostState = remember { SnackbarHostState() }
@@ -166,6 +171,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                         .imePadding(),
+                    containerColor = Color(0xFF121218),
                     snackbarHost = {
                         SnackbarHost(snackbarHostState) { data ->
                             val contentColor = if (snackbarType.value == SnackbarType.ERROR) Color(0xFFFF3B30) else Color(0xFF34C759)
@@ -178,15 +184,17 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     bottomBar = {
-                        if (currentRoute != "starthere") {
+                        if (currentRoute != "starthere" && currentRoute != null) {
                             BottomNavBar(
-                                selectedIndex = selectedIndex,
+                                selectedIndex = selectedIndex.intValue,
                                 onItemSelected = { index, navItem ->
-                                    selectedIndex = index
+                                    // Set the index before navigation
+                                    selectedIndex.intValue = index
+
+                                    // Simple navigation approach without popUpTo
                                     navController.navigate(navItem.forRoute) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            inclusive = true
-                                        }
+                                        // Only use launchSingleTop to avoid duplicates
+                                        launchSingleTop = true
                                     }
                                 },
                                 userViewModel = userViewModel,
@@ -211,7 +219,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-//                        WeInRoom("7","706")
                     }
                 }
             }
