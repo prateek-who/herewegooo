@@ -15,6 +15,7 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.realtime.Realtime
 import io.ktor.client.plugins.websocket.WebSockets
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,11 +26,18 @@ import java.time.LocalTime
 
 
 @Serializable
-data class ProfileRole(
+data class LoginDataOne(
+    val user_id: String,
     val role: String,
     val username: String,
     val profile_pic: String,
-    val join_date: String
+    val join_date: String,
+    val favourite_quote: String
+)
+
+@Serializable
+data class LoginDataTwo(
+    val course_name: String,
 )
 
 @Serializable
@@ -48,12 +56,12 @@ fun supabaseClient(): SupabaseClient {
             autoLoadFromStorage = false
         }
         install(Postgrest)
-//        install(Realtime)
 
         httpConfig {
             this.install(WebSockets)
 
         }
+        install(Realtime)
         //install other modules hereererere
     }
     return client
@@ -130,7 +138,7 @@ data class sendRequest(
     val classDate: String,
     val startTime: LocalTime,
     val endTime: LocalTime,
-    val facultyName: String,
+    val facultyId: String,
     val classroomId: Int,
     val reason: String
 )
@@ -141,7 +149,7 @@ data class finalEventConformation(
     val end_time: LocalTime,
     val course_id: String?,
     val classroom_id: Int,
-    val faculty_name: String,
+    val faculty_id: String,
     val reason: String
 )
 
@@ -163,8 +171,9 @@ data class finalEventPushDataClass(
 )
 
 @Serializable
-data class TeacherId(
-    val user_id: String
+data class SubjectList(
+    val course_id: String,
+    val course_name: String,
 )
 
 @Serializable
@@ -186,7 +195,7 @@ data class Request(
     @Serializable(with = TimeSerializer::class)
     val end_time: LocalTime,
 
-    val faculty_name: String,
+    val faculty_id: String,
     val classroom_id: Int,
     val reason: String
 )
@@ -205,10 +214,20 @@ data class ReceiveRequests(
     @Serializable(with = TimeSerializer::class)
     val end_time: LocalTime,
 
-    val faculty_name: String,
+    val faculty_id: String,
     val classroom_id: Int,
     val request_created: String,
     val reason: String
+)
+
+data class RequestWithFacultyName(
+    val request: ReceiveRequests,
+    val facultyName: String
+)
+
+@Serializable
+data class getFacultyName(
+    val username: String
 )
 
 @Serializable
@@ -229,4 +248,37 @@ fun RawEvent.toEvent(): Event = Event(
     title = this.title.courseName,
     facultyName = this.facultyName?.user?.username,
     color = this.facultyName?.color ?:Color(0xFF9B4CBF)
+)
+
+
+//data class Period(
+//    val startTime: LocalTime,
+//    val endTime: LocalTime,
+//    val title: String,
+//    val classroom_id: String,
+//)
+
+@Serializable
+data class RawTimeTable(
+    @SerialName("start_time")
+    @Serializable(with = TimeSerializer::class)
+    val startTime: LocalTime,
+
+    @SerialName("end_time")
+    @Serializable(with = TimeSerializer::class)
+    val endTime: LocalTime,
+
+    @SerialName("courses")
+    val title: Course,
+
+    val classroom_id: Int,
+)
+
+data class Period(
+    val subjectName: String,
+    val startTime: LocalTime,
+    val endTime: LocalTime,
+    val roomNumber: String,
+    val color: Color,
+    val status: String
 )

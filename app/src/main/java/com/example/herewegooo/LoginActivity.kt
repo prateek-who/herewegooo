@@ -3,6 +3,7 @@ package com.example.herewegooo
 import android.net.http.NetworkException
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -106,9 +107,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
@@ -139,8 +142,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ModifierInfo
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -162,7 +168,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.herewegooo.data.model.UserViewModel
-import com.example.herewegooo.network.ProfileRole
+import com.example.herewegooo.network.LoginDataOne
+import com.example.herewegooo.network.LoginDataTwo
 import com.example.herewegooo.network.singInUser
 import com.example.herewegooo.network.supabaseClient
 import io.github.jan.supabase.auth.auth
@@ -174,6 +181,9 @@ import kotlinx.coroutines.launch
 import com.example.herewegooo.ui.theme.HerewegoooTheme
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.Dispatcher
 
 
 @Composable
@@ -182,10 +192,23 @@ fun Login(
     userViewModel: UserViewModel,
     onShowSnackbar: (String, SnackbarType) -> Unit
 ) {
+    // Original state variables
     var emailText by remember { mutableStateOf("") }
     var passwordText by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+
+    // More vibrant color scheme
+    val backgroundColor = Color(0xFF161626)  // Deep blue background
+    val textColor = Color(0xFFF8F8FF)         // Bright white text
+    val accentColor = Color(0xFF4DA8DA)       // Bright blue accent
+    val buttonColor = Color(0xFF16B1AC)       // Teal button color
+    val cardBackground = Color(0xFF272C3D)    // Slightly brighter card background
+    val highlightColor = Color(0xFFFF7B89)    // Coral highlight for attention areas
+
+    // Updated field background colors to match the theme
+    val unfocusedFieldColor = Color(0xFF1E2239)  // Darker version of cardBackground
+    val focusedFieldColor = Color(0xFF222845)    // Slightly lighter when focused
 
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
@@ -194,6 +217,7 @@ fun Login(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(backgroundColor)  // Using updated backgroundColor
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
@@ -201,9 +225,6 @@ fun Login(
                 focusManager.clearFocus()
             }
     ) {
-        // Dynamic Background with animation
-        SleekBackground()
-
         // Content
         Column(
             modifier = Modifier
@@ -216,59 +237,83 @@ fun Login(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Logo placeholder - replace with your app logo
+            // Animated logo with gradient border
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(140.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.15f)),
+                    .border(
+                        width = 4.dp,
+                        brush = Brush.sweepGradient(
+                            listOf(
+                                accentColor,
+                                highlightColor,
+                                buttonColor,
+                                accentColor
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .shadow(10.dp, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-//                Icon(
-//                    imageVector = Icons.Default.Home, //School
-//                    contentDescription = "School Logo",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(48.dp)
-//                )
                 Image(
                     painter = painterResource(id = R.drawable.real),
-                    contentDescription = null,
-                    modifier = Modifier.size(198.dp)
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // App name with more stylized text
             Text(
                 text = "RoomSync",
-                style = MaterialTheme.typography.headlineMedium,
-                fontFamily = funnelFont,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = karlaFont,
+                color = textColor,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = accentColor.copy(alpha = 0.5f),
+                        offset = Offset(0f, 0f),
+                        blurRadius = 8f
+                    )
+                )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Subtitle with accent color and styling
             Text(
                 text = "Faculty & Administration Login",
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = funnelFont,
-                color = Color.White.copy(alpha = 0.7f)
+                fontSize = 16.sp,
+                color = highlightColor,
+                fontFamily = karlaFont,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(top = 4.dp)
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Sleek Card for login form
+            // Login card with enhanced styling and shadow - updated with cardBackground
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 10.dp,
+                        spotColor = accentColor.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(20.dp)
+                    ),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1F1F24).copy(alpha = 0.85f)
+                    containerColor = cardBackground  // Using updated cardBackground
                 ),
                 elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp
+                    defaultElevation = 6.dp
                 )
             ) {
                 Column(
@@ -277,50 +322,67 @@ fun Login(
                         .padding(horizontal = 24.dp, vertical = 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Faculty Login Form
-                    Text(
-                        text = "Faculty Login",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontFamily = funnelFont,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Faculty Login Form Header
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.key),
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Faculty Login",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = karlaFont,
+                            color = textColor
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                    // Email field with sleeker design
+                    // Email field with enhanced styling - updated container colors
                     OutlinedTextField(
                         textStyle = TextStyle(
                             fontFamily = karlaFont,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = textColor
                         ),
                         value = emailText,
                         onValueChange = { emailText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(4.dp, RoundedCornerShape(12.dp)),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF282831),
-                            focusedContainerColor = Color(0xFF2F2F3A),
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.White.copy(alpha = 0.5f),
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            focusedLabelColor = Color.White.copy(alpha = 0.5f),
-                            cursorColor = Color.White
+                            unfocusedContainerColor = unfocusedFieldColor,
+                            focusedContainerColor = focusedFieldColor,
+                            unfocusedBorderColor = accentColor.copy(alpha = 0.4f),
+                            focusedBorderColor = accentColor,
+                            unfocusedTextColor = textColor,
+                            focusedTextColor = textColor,
+                            unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                            focusedLabelColor = accentColor,
+                            cursorColor = accentColor
                         ),
                         label = {
                             Text(
                                 "Email / Username",
-                                fontFamily = funnelFont,
-                                style = MaterialTheme.typography.bodyMedium
+                                fontFamily = karlaFont,
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = "Email",
-                                tint = Color.White.copy(alpha = 0.7f),
-                                modifier = Modifier.size(16.dp)
+                                tint = accentColor,
+                                modifier = Modifier.size(22.dp)
                             )
                         },
                         keyboardOptions = KeyboardOptions(
@@ -333,46 +395,50 @@ fun Login(
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Password field with sleeker design
+                    // Password field with enhanced styling - updated container colors
                     OutlinedTextField(
                         textStyle = TextStyle(
                             fontFamily = karlaFont,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = textColor
                         ),
                         value = passwordText,
                         onValueChange = { passwordText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(4.dp, RoundedCornerShape(12.dp)),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFF282831),
-                            focusedContainerColor = Color(0xFF2F2F3A),
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.White.copy(alpha = 0.5f),
-                            unfocusedTextColor = Color.White,
-                            focusedTextColor = Color.White,
-                            focusedLabelColor = Color.White.copy(alpha = 0.5f),
-                            cursorColor = Color.White
+                            unfocusedContainerColor = unfocusedFieldColor,
+                            focusedContainerColor = focusedFieldColor,
+                            unfocusedBorderColor = accentColor.copy(alpha = 0.4f),
+                            focusedBorderColor = accentColor,
+                            unfocusedTextColor = textColor,
+                            focusedTextColor = textColor,
+                            unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                            focusedLabelColor = accentColor,
+                            cursorColor = accentColor
                         ),
                         label = {
                             Text(
                                 "Password",
-                                fontFamily = funnelFont,
-                                style = MaterialTheme.typography.bodyMedium
+                                fontFamily = karlaFont,
+                                fontSize = 14.sp
                             )
                         },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Password",
-                                tint = Color.White.copy(alpha = 0.7f),
-                                modifier = Modifier.size(16.dp)
+                                tint = accentColor,
+                                modifier = Modifier.size(22.dp)
                             )
                         },
                         trailingIcon = {
                             IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                Image(
+                                Icon(
                                     painter = if (isPasswordVisible)
                                         painterResource(id = R.drawable.visible)
                                     else
@@ -381,7 +447,8 @@ fun Login(
                                         "Hide password"
                                     else
                                         "Show password",
-                                    modifier = Modifier.size(16.dp)
+                                    tint = accentColor,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         },
@@ -415,9 +482,9 @@ fun Login(
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(36.dp))
 
-                    // Sign in button with sleeker design
+                    // Sign in button with gradient and shadow
                     Button(
                         onClick = {
                             focusManager.clearFocus()
@@ -438,27 +505,52 @@ fun Login(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(58.dp)
+                            .shadow(8.dp, RoundedCornerShape(16.dp)),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4F6BFF),
+                            containerColor = Color.Transparent,
                             contentColor = Color.White
                         ),
-                        enabled = !isLoading
+                        enabled = !isLoading,
+                        contentPadding = PaddingValues(0.dp)
                     ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = "Sign In",
-                                fontFamily = funnelFont,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(buttonColor, accentColor)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.login),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Sign In",
+                                        fontFamily = karlaFont,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -466,69 +558,109 @@ fun Login(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Student Access Section with divider
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Color.White.copy(alpha = 0.3f),
-                        thickness = 1.dp
-                    )
-                    Text(
-                        text = "STUDENT ACCESS",
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontFamily = funnelFont,
-                        fontWeight = FontWeight.Medium
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        color = Color.White.copy(alpha = 0.3f),
-                        thickness = 1.dp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Student access button
-                Button(
-                    onClick = {
-                        userViewModel.userRole = "student"
-                        userViewModel.userName = "student"
-                        navController.navigate(route = "home") {
-                            popUpTo(route = "starthere") {
-                                inclusive = true
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF282831),
-                        contentColor = Color.White
+            // Student access card with enhanced design - updated with backgroundColor-based color
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        spotColor = highlightColor.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(20.dp)
                     ),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                colors = CardDefaults.cardColors(
+                    containerColor = cardBackground  // Updated to match cardBackground
+                ),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            highlightColor.copy(alpha = 0.5f),
+                            accentColor.copy(alpha = 0.2f)
+                        )
+                    )
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Student Access",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.school),
+                            contentDescription = null,
+                            tint = highlightColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "Student Access",
+                            color = highlightColor,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = karlaFont
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = "Student Access",
-                        fontFamily = funnelFont,
-                        style = MaterialTheme.typography.titleMedium
+                        text = "Students can access the app directly without faculty credentials.",
+                        color = textColor,
+                        fontSize = 15.sp,
+                        lineHeight = 24.sp,
+                        fontFamily = karlaFont
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Student access button with animated gradient border - updated background color
+                    Button(
+                        onClick = {
+                            userViewModel.userRole = "student"
+                            userViewModel.userName = "student"
+                            navController.navigate(route = "home") {
+                                popUpTo(route = "starthere") {
+                                    inclusive = true
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .shadow(4.dp, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = unfocusedFieldColor,  // Updated to match field background
+                            contentColor = textColor
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    highlightColor.copy(alpha = 0.7f),
+                                    accentColor.copy(alpha = 0.7f)
+                                )
+                            )
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Student Access",
+                            modifier = Modifier.size(20.dp),
+                            tint = highlightColor
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Student Access",
+                            fontFamily = karlaFont,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
@@ -537,85 +669,6 @@ fun Login(
     }
 }
 
-@Composable
-private fun SleekBackground() {
-    // Elegant animated background
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Base gradient
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF121218))
-        )
-
-        // Animated particles/elements
-//        val infiniteTransition = rememberInfiniteTransition(label = "background")
-//        val particleAlpha by infiniteTransition.animateFloat(
-//            initialValue = 0.5f,
-//            targetValue = 0.8f,
-//            animationSpec = infiniteRepeatable(
-//                animation = tween(3000, easing = LinearEasing),
-//                repeatMode = RepeatMode.Reverse
-//            ),
-//            label = "particles"
-//        )
-//
-//        Canvas(modifier = Modifier.fillMaxSize()) {
-//            // Draw gradient overlay
-//            drawRect(
-//                brush = Brush.radialGradient(
-//                    colors = listOf(
-//                        Color(0xFF3366FF).copy(alpha = 0.15f),
-//                        Color.Transparent
-//                    ),
-//                    center = Offset(size.width * 0.7f, size.height * 0.3f),
-//                    radius = size.minDimension * 0.8f
-//                )
-//            )
-//
-//            // Draw subtle grid pattern
-//            val gridSpacing = 50.dp.toPx()
-//            val gridColor = Color.White.copy(alpha = 0.03f)
-//
-//            // Horizontal lines
-//            for (y in 0..size.height.toInt() step gridSpacing.toInt()) {
-//                drawLine(
-//                    color = gridColor,
-//                    start = Offset(0f, y.toFloat()),
-//                    end = Offset(size.width, y.toFloat()),
-//                    strokeWidth = 1f
-//                )
-//            }
-//
-//            // Vertical lines
-//            for (x in 0..size.width.toInt() step gridSpacing.toInt()) {
-//                drawLine(
-//                    color = gridColor,
-//                    start = Offset(x.toFloat(), 0f),
-//                    end = Offset(x.toFloat(), size.height),
-//                    strokeWidth = 1f
-//                )
-//            }
-//
-//            // Draw accent circles/particles
-//            val particlePositions = listOf(
-//                Offset(size.width * 0.2f, size.height * 0.2f),
-//                Offset(size.width * 0.8f, size.height * 0.15f),
-//                Offset(size.width * 0.1f, size.height * 0.85f),
-//                Offset(size.width * 0.9f, size.height * 0.75f),
-//                Offset(size.width * 0.5f, size.height * 0.95f)
-//            )
-//
-//            particlePositions.forEach { position ->
-//                drawCircle(
-//                    color = Color(0xFF4D69FF).copy(alpha = particleAlpha * 0.2f),
-//                    center = position,
-//                    radius = 100.dp.toPx()
-//                )
-//            }
-//        }
-    }
-}
 
 // Helper function to handle login logic
 private fun handleLogin(
@@ -629,48 +682,77 @@ private fun handleLogin(
     setLoading: (Boolean) -> Unit
 ) {
     setLoading(true)
-    coroutineScope.launch {
+    coroutineScope.launch(Dispatchers.IO) {
         try {
             singInUser(client, email, password)
                 .onSuccess {
                     val userId = client.auth.currentUserOrNull()?.id ?: run {
-                        setLoading(false)
+                        withContext(Dispatchers.Main) {
+                            setLoading(false)
+                        }
                         return@launch
                     }
 
+                    Log.d("LoginDebug", "WE IN!!")
+
                     val user = client.from("users")
-                        .select(Columns.list("role, username", "profile_pic", "join_date")) {
+                        .select(Columns.list("user_id, role, username", "profile_pic", "join_date", "favourite_quote")) {
                             filter {
                                 eq("user_id", userId)
                             }
-                        }.decodeSingle<ProfileRole>()
+                        }.decodeSingle<LoginDataOne>()
 
-                    userViewModel.userRole = user.role
-                    userViewModel.userName = user.username
-                    userViewModel.profilePic = user.profile_pic
-                    userViewModel.joinDate = user.join_date
+                    Log.d("LoginDebug", "We made the supabase client")
 
-                    val destination = if (user.role == "admin") "adminPanel" else "home"
-                    navController.navigate(route = destination) {
-                        popUpTo(route = "starthere") {
-                            inclusive = true
+                    val userSubs = client.from("courses")
+                        .select(Columns.list("course_name")) {
+                            filter {
+                                eq("faculty_id", userId)
+                            }
+                        }.decodeList<LoginDataTwo>()
+
+                    val courseNamesList = userSubs.map { it.course_name }
+
+                    withContext(Dispatchers.Main) {
+                        userViewModel.userId = user.user_id
+                        userViewModel.userRole = user.role
+                        userViewModel.userName = user.username
+                        userViewModel.profilePic = user.profile_pic
+                        userViewModel.joinDate = user.join_date
+                        userViewModel.favouriteQuote = user.favourite_quote
+                        userViewModel.course_names = courseNamesList
+
+                        Log.d("LoginDebug", "Everything assigned, we should be going in now")
+
+                        val destination = if (user.role == "admin") "adminPanel" else "home"
+                        navController.navigate(route = destination) {
+                            Log.d("LoginDebug", "We should be in now")
+                            popUpTo(route = "starthere") {
+                                inclusive = true
+                            }
                         }
                     }
                 }
                 .onFailure { error ->
-                    val message = when (error) {
-                        is AuthWeakPasswordException -> "Your password is too weak!"
+                    withContext(Dispatchers.Main) {
+                        val message = when (error) {
+                            is AuthWeakPasswordException -> "Your password is too weak!"
 //                        is AuthInvalidCredentialsException -> "Invalid email or password"
 //                        is AuthApiException -> "Authentication failed"
 //                        is NetworkException -> "Network error. Please check your connection."
-                        else -> "Please try again later."
+                            else -> "Please try again later."
+                        }
+                        onShowSnackbar("Sign-in failed: $message", SnackbarType.ERROR)
                     }
-                    onShowSnackbar("Sign-in failed: $message", SnackbarType.ERROR)
                 }
         } catch (e: Exception) {
-            onShowSnackbar("An unexpected error occurred", SnackbarType.ERROR)
+            withContext(Dispatchers.Main) {
+                onShowSnackbar("An unexpected error occurred", SnackbarType.ERROR)
+            }
         } finally {
-            setLoading(false)
+            withContext(Dispatchers.Main) {
+                setLoading(false)
+            }
         }
     }
 }

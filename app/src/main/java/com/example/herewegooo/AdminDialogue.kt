@@ -2,6 +2,7 @@ package com.example.herewegooo
 
 
 import android.media.Image
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -83,10 +84,11 @@ import com.example.herewegooo.network.CourseTableQuery
 import com.example.herewegooo.network.DeletionId
 import com.example.herewegooo.network.IdColumnVerify
 import com.example.herewegooo.network.Request
-import com.example.herewegooo.network.TeacherId
+import com.example.herewegooo.network.SubjectList
 import com.example.herewegooo.network.courseInsertion
 import com.example.herewegooo.network.finalEventConformation
 import com.example.herewegooo.network.finalEventPushDataClass
+import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.sendRequest
 import com.example.herewegooo.network.supabaseClient
 import io.github.jan.supabase.SupabaseClient
@@ -110,6 +112,8 @@ val staticSubjectMap = mapOf(
     null to "Custom"
 )
 
+private var cachedSubjects: Map<String?, String>? = null
+
 @Composable
 fun AdminDialogue(
     openDialog: Boolean,
@@ -118,11 +122,36 @@ fun AdminDialogue(
     roomNumber: String,
     fromTime: LocalTime,
     toTime: LocalTime,
+    facultyId: String,
     facultyName: String,
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val client = supabaseClient()
+
+    var subjectMap by remember { mutableStateOf<Map<String?, String>>(emptyMap()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        if (cachedSubjects == null) {
+            try {
+                val subjects = getSubjectList(client)
+                val convertedMap = convertSubjectListToMap(subjects)
+                cachedSubjects = convertedMap
+                subjectMap = convertedMap
+                isLoading = false
+                println("We got the list!")
+            } catch (e: Exception) {
+                Log.e("AdminDialogue", "Error loading subjects", e)
+                // Use static map as fallback
+                subjectMap = staticSubjectMap
+                isLoading = false
+            }
+        }else{
+            subjectMap = cachedSubjects!!
+            isLoading = false
+        }
+    }
 
     var subject by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
@@ -133,8 +162,8 @@ fun AdminDialogue(
     var customSubjectName by remember { mutableStateOf("") }
     var customSubjectId by remember { mutableStateOf("") }
 
-    val subjectEntries = staticSubjectMap.entries.toList()
-    val filteredSubjects by remember(subject) {
+    val subjectEntries = subjectMap.entries.toList()
+    val filteredSubjects by remember(subject, subjectMap) {
         derivedStateOf {
             if (subject.isEmpty()) {
                 subjectEntries
@@ -222,25 +251,25 @@ fun AdminDialogue(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            BookingSummaryItem(
+                            BookingSummaryItemAdmin(
                                 image = painterResource(id = R.drawable.calendartoda),
                                 label = "Date",
                                 value = formattedDate
                             )
 
-                            BookingSummaryItem(
+                            BookingSummaryItemAdmin(
                                 image = painterResource(id = R.drawable.accesstime),
                                 label = "Time",
                                 value = "$formattedStartTime - $formattedEndTime"
                             )
 
-                            BookingSummaryItem(
+                            BookingSummaryItemAdmin(
                                 image = painterResource(id = R.drawable.room),
                                 label = "Room",
                                 value = "Classroom $roomNumber"
                             )
 
-                            BookingSummaryItem(
+                            BookingSummaryItemAdmin(
                                 image = painterResource(id = R.drawable.person),
                                 label = "Faculty",
                                 value = facultyName
@@ -457,7 +486,7 @@ fun AdminDialogue(
                                             toTime,
                                             selectedSubjectCode,
                                             roomNumber.toInt(),
-                                            facultyName,
+                                            facultyId,
                                             subject
                                         ),
                                         customSubjectName = customSubjectName,
@@ -500,8 +529,9 @@ fun AdminDialogue(
     }
 }
 
+
 @Composable
-private fun BookingSummaryItem(
+private fun BookingSummaryItemAdmin(
     image: Painter,
     label: String,
     value: String
@@ -542,7 +572,28 @@ private fun BookingSummaryItem(
     }
 }
 
-// AdminDenyDialogue would follow similar modernization patterns
+
+suspend fun getSubjectList(
+    client: SupabaseClient
+): List<SubjectList>{
+    val subjects = client.from("courses").select(columns = Columns.list("course_id, course_name")).decodeList<SubjectList>()
+
+    return subjects
+}
+
+fun convertSubjectListToMap(
+    subjectList: List<SubjectList>
+): Map<String?, String> {
+
+    val resultMap = mutableMapOf<String?, String>()
+    subjectList.forEach { subject ->
+        resultMap[subject.course_id] = subject.course_name
+    }
+
+    resultMap[null] = "Custom"
+
+    return resultMap
+}
 
 
 suspend fun finalEventPush(
@@ -552,28 +603,21 @@ suspend fun finalEventPush(
     customSubjectId: String
 ){
     try{
-        val teacherId = client.from("users").select (columns = Columns.list("user_id")) {
-            filter {
-            eq("username", finalEventList.faculty_name)
-            }
-        }.decodeSingle<TeacherId>()
-
         val requestDeleteId = client.from("requests").select(columns = Columns.list("id")) {
             filter {
                 eq("class_date", finalEventList.classDate)
                 eq("start_time", finalEventList.start_time)
                 eq("end_time", finalEventList.end_time)
-                eq("faculty_name", finalEventList.faculty_name)
+                eq("faculty_id", finalEventList.faculty_id)
                 eq("classroom_id", finalEventList.classroom_id)
             }
         }.decodeSingle<DeletionId>()
 
         if (finalEventList.course_id == ""){
-            val courseTableInsertion = courseInsertion(customSubjectId, customSubjectName, teacherId.user_id)
+            val courseTableInsertion = courseInsertion(customSubjectId, customSubjectName, finalEventList.faculty_id)
             val result = client.from("courses").insert(courseTableInsertion) {
                 select()
             }.decodeSingle<CourseTableQuery>()
-//            delay(1000)
 
             val insertInTimeTable = finalEventPushDataClass(
                 finalEventList.classDate,
@@ -581,7 +625,7 @@ suspend fun finalEventPush(
                 finalEventList.end_time,
                 result.course_id,
                 finalEventList.classroom_id,
-                teacherId.user_id)
+                finalEventList.faculty_id)
             client.from("timetable").insert(insertInTimeTable)
         }else {
             val insertInTimeTable = finalEventPushDataClass(
@@ -590,9 +634,8 @@ suspend fun finalEventPush(
                 finalEventList.end_time,
                 finalEventList.course_id.toString(),
                 finalEventList.classroom_id,
-                teacherId.user_id)
-            client.from("timetable").insert(insertInTimeTable) {
-            }
+                finalEventList.faculty_id)
+            client.from("timetable").insert(insertInTimeTable)
         }
 
         client.from("requests").delete{
