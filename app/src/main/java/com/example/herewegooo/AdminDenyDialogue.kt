@@ -3,8 +3,6 @@ package com.example.herewegooo
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,10 +64,10 @@ import com.example.herewegooo.network.CourseTableQuery
 import com.example.herewegooo.network.DeletionId
 import com.example.herewegooo.network.IdColumnVerify
 import com.example.herewegooo.network.Request
-import com.example.herewegooo.network.TeacherId
 import com.example.herewegooo.network.courseInsertion
 import com.example.herewegooo.network.finalEventConformation
 import com.example.herewegooo.network.finalEventPushDataClass
+import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.sendRequest
 import com.example.herewegooo.network.supabaseClient
 import io.github.jan.supabase.SupabaseClient
@@ -93,6 +91,7 @@ fun AdminDenyDialogue(
     roomNumber: String,
     fromTime: LocalTime,
     toTime: LocalTime,
+    facultyId: String,
     facultyName: String,
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
@@ -213,7 +212,7 @@ fun AdminDenyDialogue(
                                             bookingDate,
                                             fromTime,
                                             toTime,
-                                            facultyName,
+                                            facultyId,
                                             roomNumber.toInt(),
                                             "who cares"
                                         )
@@ -294,7 +293,7 @@ suspend fun finalDenyConformation(
                 eq("class_date", finalEventDeny.classDate)
                 eq("start_time", finalEventDeny.startTime)
                 eq("end_time", finalEventDeny.endTime)
-                eq("faculty_name", finalEventDeny.facultyName)
+                eq("faculty_id", finalEventDeny.facultyId)
                 eq("classroom_id", finalEventDeny.classroomId)
             }
         }.decodeSingle<DeletionId>()

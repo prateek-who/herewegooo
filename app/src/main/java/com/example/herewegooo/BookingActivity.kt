@@ -1,5 +1,6 @@
 package com.example.herewegooo
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,9 +11,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,12 +29,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -48,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
@@ -63,6 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.PopupProperties
 import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.IdColumnVerify
 import com.example.herewegooo.network.Request
@@ -75,6 +84,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @Composable
@@ -108,56 +118,64 @@ fun BookingDialog(
     var toMeridianEntry by remember { mutableStateOf("AM") }
     var reason by remember { mutableStateOf("") }
 
+    // Format the selected date for display
+    val displayDateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)
+    val parsedDate = try {
+        LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+    } catch (e: Exception) {
+        LocalDate.now()
+    }
+    val formattedDisplayDate = parsedDate.format(displayDateFormatter)
+
     val client = supabaseClient()
 
     if (openDialog) {
-        Dialog(onDismissRequest = onDismiss) {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF1F1F23),
+                color = Color(0xFF1E1E22),
                 modifier = Modifier
-                    .padding(16.dp)
-                    .width(400.dp)
-                    .height(750.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = 750.dp)
                     .shadow(elevation = 8.dp, shape = RoundedCornerShape(16.dp))
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     // Modern gradient header
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(80.dp)
                             .background(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
-                                        Color(0xFF4A6572),
-                                        Color(0xFF344955)
+                                        Color(0xFF1976D2),  // Darker blue
+                                        Color(0xFF64B5F6)   // Lighter blue
                                     )
                                 )
                             )
-                    ) {
+                            .padding(vertical = 16.dp, horizontal = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ){
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.schedule),
-                                contentDescription = "Book Slot",
-//                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
                             )
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
                             Text(
                                 text = "Book Your Slot",
-                                modifier = Modifier,
-                                fontSize = 26.sp,
-                                fontFamily = oswaldFont,
-                                fontWeight = FontWeight.Bold,
                                 color = Color.White,
+                                fontFamily = oswaldFont,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
                             )
                         }
@@ -169,244 +187,289 @@ fun BookingDialog(
                             .fillMaxWidth()
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .padding(bottom = 16.dp)
                     ) {
-                        // Room Number
-                        ModernInfoField(
-                            label = "Room Number",
-                            value = roomNumber,
-                            painter = painterResource(id = R.drawable.room)
-                        )
-
-                        // Date Selection
-                        Column(
+                        // Room info
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF2A2A2E))
-                                .padding(16.dp)
+                                .background(Color(0xFF242428))
+                                .padding(14.dp)
+                                .height(45.dp)
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.calendartoda),
-                                        contentDescription = "Date",
-                                        tint = Color(0xFF64B5F6),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "Date",
-                                            fontFamily = karlaFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp,
-                                            color = Color(0xFF8F8F96)
-                                        )
-                                        Text(
-                                            text = selectedDate,
-                                            fontFamily = funnelFont,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 24.sp,
-                                            color = Color.White
-                                        )
-                                    }
-                                }
+                                Icon(
+                                    painter = painterResource(id = R.drawable.room),
+                                    contentDescription = "Room Icon",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFABABAF)
+                                )
 
-                                IconButton(
-                                    onClick = { expanded = true },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(
-                                            color = Color(0xFF3A3A3F),
-                                            shape = CircleShape
-                                        )
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "Select Date",
-                                        tint = Color.White
+                                    Text(
+                                        text = "ROOM",
+                                        fontFamily = karlaFont,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFABABAF),
+                                        letterSpacing = 0.5.sp
+                                    )
+
+                                    Text(
+                                        text = "Classroom $roomNumber",
+                                        fontFamily = oswaldFont,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White
                                     )
                                 }
                             }
+                        }
 
-                            // Date dropdown menu
-                            DropdownMenu(
-                                modifier = Modifier
-                                    .width(300.dp)
-                                    .background(Color(0xFF2A2A2E)),
-                                expanded = expanded && dateOptions.isNotEmpty(),
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                val itemHeight = 48.dp
-                                val maxHeight = 250.dp
-                                val totalHeight =
-                                    (dateOptions.size * itemHeight).coerceAtMost(maxHeight)
+                        // Date selection
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = "SELECT DATE",
+                                color = Color(0xFFABABAF),
+                                fontFamily = oswaldFont,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium
+                            )
 
-                                Box(
-                                    modifier = Modifier
-                                        .height(totalHeight)
-                                        .verticalScroll(rememberScrollState())
-                                ) {
-                                    Column {
-                                        dateOptions.forEach { date ->
-                                            DropdownMenuItem(
-                                                onClick = {
-                                                    selectedDate = date
-                                                    expanded = false
-                                                },
-                                                text = {
-                                                    Text(
-                                                        text = date,
-                                                        color = Color.White,
-                                                        fontFamily = funnelFont,
-                                                        fontSize = 18.sp
-                                                    )
-                                                }
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = formattedDisplayDate,
+                                    onValueChange = { },
+                                    enabled = false,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = TextStyle(
+                                        fontFamily = karlaFont,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFFFAFAFA)
+                                    ),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledBorderColor = Color(0xFF3C3C3E),
+                                        disabledContainerColor = Color(0xFF28282C),
+                                        disabledTextColor = Color(0xFFFAFAFA)
+                                    ),
+                                    trailingIcon = {
+                                        IconButton(onClick = { expanded = true }) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.ArrowDropDown,
+                                                contentDescription = "Select Date",
+                                                tint = Color(0xFFABABAF)
                                             )
                                         }
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.calendartoda),
+                                            contentDescription = "Calendar",
+                                            tint = Color(0xFF64B5F6),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                                // Make the whole field clickable
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { expanded = true }
+                                )
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.9f)
+                                        .heightIn(max = 250.dp)
+                                        .background(Color(0xFF28282C)),
+                                    properties = PopupProperties(focusable = false)
+                                ) {
+                                    dateOptions.forEach { date ->
+                                        val formattedOptionDate = try {
+                                            val parsed = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                            parsed.format(displayDateFormatter)
+                                        } catch (e: Exception) {
+                                            date
+                                        }
+
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                selectedDate = date
+                                                expanded = false
+                                            },
+                                            text = {
+                                                Text(
+                                                    text = formattedOptionDate,
+                                                    color = Color.White,
+                                                    fontFamily = karlaFont,
+                                                    fontSize = 16.sp
+                                                )
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        // From Time Selection
-                        ModernTimeSelection(
-                            label = "From",
-                            icon = painterResource(id = R.drawable.schedule),
-                            hourValue = fromHourEntry,
-                            onHourChange = { newValue ->
-                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                    fromHourEntry = newValue
-
-                                    if (newValue.length == 2) {
-                                        val intVal = newValue.toIntOrNull()
-                                        if (intVal == null || intVal !in 1 until 13) {
-                                            fromHourEntry = ""
-                                        }
-                                    }
-                                }
-                            },
-                            minuteValue = fromMinuteEntry,
-                            onMinuteChange = { newValue ->
-                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                    fromMinuteEntry = newValue
-
-                                    if (newValue.length == 2) {
-                                        val intVal = newValue.toIntOrNull()
-                                        if (intVal == null || intVal !in 0 until 60) {
-                                            fromMinuteEntry = ""
-                                        }
-                                    }
-                                }
-                            },
-                            meridianValue = fromMeridianEntry,
-                            onMeridianChange = { fromMeridianEntry = it }
-                        )
-
-                        // To Time Selection
-                        ModernTimeSelection(
-                            label = "To",
-                            icon = painterResource(id = R.drawable.schedule),
-                            iconTint = Color(0xFFFF7043),
-                            hourValue = toHourEntry,
-                            onHourChange = { newValue ->
-                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                    toHourEntry = newValue
-
-                                    if (newValue.length == 2) {
-                                        val intVal = newValue.toIntOrNull()
-                                        if (intVal == null || intVal !in 1 until 13) {
-                                            toHourEntry = ""
-                                        }
-                                    }
-                                }
-                            },
-                            minuteValue = toMinuteEntry,
-                            onMinuteChange = { newValue ->
-                                if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
-                                    toMinuteEntry = newValue
-
-                                    if (newValue.length == 2) {
-                                        val intVal = newValue.toIntOrNull()
-                                        if (intVal == null || intVal !in 0 until 60) {
-                                            toMinuteEntry = ""
-                                        }
-                                    }
-                                }
-                            },
-                            meridianValue = toMeridianEntry,
-                            onMeridianChange = { toMeridianEntry = it }
-                        )
-
-                        // Faculty Info
-                        ModernInfoField(
-                            label = "Faculty",
-                            value = user.userName,
-                            icon = Icons.Default.Person
-                        )
-
-                        // Reason for booking
+                        // Time selection section
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF2A2A2E))
+                                .padding(horizontal = 24.dp, vertical = 18.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ){
+                            Text(
+                                text = "SELECT TIME",
+                                color = Color(0xFFABABAF),
+                                fontFamily = oswaldFont,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            // From Time row
+                            TimeSelectionRow(
+                                label = "From",
+                                hourValue = fromHourEntry,
+                                onHourChange = { newValue ->
+                                    if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                        fromHourEntry = newValue
+                                        if (newValue.length == 2) {
+                                            val intVal = newValue.toIntOrNull()
+                                            if (intVal == null || intVal !in 1..12) {
+                                                fromHourEntry = ""
+                                            }
+                                        }
+                                    }
+                                },
+                                minuteValue = fromMinuteEntry,
+                                onMinuteChange = { newValue ->
+                                    if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                        fromMinuteEntry = newValue
+                                        if (newValue.length == 2) {
+                                            val intVal = newValue.toIntOrNull()
+                                            if (intVal == null || intVal !in 0..59) {
+                                                fromMinuteEntry = ""
+                                            }
+                                        }
+                                    }
+                                },
+                                meridianValue = fromMeridianEntry,
+                                onMeridianChange = { fromMeridianEntry = it },
+                                iconTint = Color(0xFF64B5F6)
+                            )
+
+                            // To Time row
+                            TimeSelectionRow(
+                                label = "To",
+                                hourValue = toHourEntry,
+                                onHourChange = { newValue ->
+                                    if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                        toHourEntry = newValue
+                                        if (newValue.length == 2) {
+                                            val intVal = newValue.toIntOrNull()
+                                            if (intVal == null || intVal !in 1..12) {
+                                                toHourEntry = ""
+                                            }
+                                        }
+                                    }
+                                },
+                                minuteValue = toMinuteEntry,
+                                onMinuteChange = { newValue ->
+                                    if (newValue.length <= 2 && newValue.all { it.isDigit() }) {
+                                        toMinuteEntry = newValue
+                                        if (newValue.length == 2) {
+                                            val intVal = newValue.toIntOrNull()
+                                            if (intVal == null || intVal !in 0..59) {
+                                                toMinuteEntry = ""
+                                            }
+                                        }
+                                    }
+                                },
+                                meridianValue = toMeridianEntry,
+                                onMeridianChange = { toMeridianEntry = it },
+                                iconTint = Color(0xFFFF7043)
+                            )
+                        }
+
+                        // Faculty info section
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF242428))
                                 .padding(16.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.description),
-                                    contentDescription = "Reason",
-                                    tint = Color(0xFF81C784),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = "Reason",
-                                    fontFamily = karlaFont,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF8F8F96)
-                                )
-                            }
+                            BookingSummaryItemTeacher(
+                                image = painterResource(id = R.drawable.person),
+                                label = "Faculty",
+                                value = user.userName
+                            )
+                        }
+
+                        // Reason field
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "REASON FOR BOOKING",
+                                color = Color(0xFFABABAF),
+                                fontFamily = oswaldFont,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.sp,
+                                fontWeight = FontWeight.Medium
+                            )
 
                             OutlinedTextField(
                                 value = reason,
                                 onValueChange = { reason = it },
-                                placeholder = {
-                                    Text(
-                                        text = "Enter reason for booking slot",
-                                        fontFamily = funnelFont,
-                                        fontSize = 14.sp,
-                                        color = Color(0xFF8F8F96)
-                                    )
-                                },
-                                textStyle = TextStyle(
-                                    fontFamily = funnelFont,
-                                    fontSize = 16.sp,
-                                    color = Color.White
-                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 8.dp)
-                                    .height(100.dp),
+                                    .heightIn(min = 120.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                textStyle = TextStyle(
+                                    fontFamily = karlaFont,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFFFAFAFA)
+                                ),
+                                placeholder = {
+                                    Text(
+                                        text = "Enter reason for booking",
+                                        fontFamily = karlaFont,
+                                        color = Color(0xFF8E8E93)
+                                    )
+                                },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF64B5F6),
-                                    unfocusedBorderColor = Color(0xFF3A3A3F),
-                                    cursorColor = Color(0xFF64B5F6),
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                )
+                                    cursorColor = Color(0xFFFAFAFA),
+                                    focusedBorderColor = Color(0xFF5E5CE6),
+                                    unfocusedBorderColor = Color(0xFF3C3C3E),
+                                    focusedContainerColor = Color(0xFF28282C),
+                                    unfocusedContainerColor = Color(0xFF28282C)
+                                ),
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.description),
+                                        contentDescription = "Reason",
+                                        tint = Color(0xFF81C784),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             )
                         }
                     }
@@ -415,33 +478,25 @@ fun BookingDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
+                            .padding(horizontal = 24.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Cancel button with updated style
-                        Button(
+                    ){
+                        OutlinedButton(
                             onClick = onDismiss,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3A3A3F)
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 0.dp,
-                                pressedElevation = 2.dp
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFF3C3C3E)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color.White
                             )
                         ) {
                             Text(
                                 text = "Cancel",
-                                fontFamily = oswaldFont,
+                                fontFamily = karlaFont,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
-
-                        // Book slot button with updated style
                         Button(
                             onClick = {
                                 val fromHour = fromHourEntry.toIntOrNull()
@@ -527,7 +582,7 @@ fun BookingDialog(
                                                         finalDate.toString(),
                                                         startTime,
                                                         endTime,
-                                                        user.userName,
+                                                        user.userId,
                                                         roomNumber.toInt(),
                                                         reason
                                                     )
@@ -549,32 +604,29 @@ fun BookingDialog(
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1.5f),
+                            shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E88E5)
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 2.dp,
-                                pressedElevation = 4.dp
+                                containerColor = Color(0xFF1976D2)
                             )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
+                                horizontalArrangement = Arrangement.Center
+                            ){
                                 Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Book",
+                                    imageVector = Icons.Rounded.Check,
+                                    contentDescription = null,
                                     modifier = Modifier.size(18.dp)
                                 )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
                                 Text(
                                     text = "Book Slot",
-                                    fontFamily = oswaldFont,
+                                    fontFamily = karlaFont,
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -586,105 +638,52 @@ fun BookingDialog(
 }
 
 @Composable
-fun ModernInfoField(
+fun TimeSelectionRow(
     label: String,
-    value: String,
-    iconTint: Color = Color(0xFF64B5F6),
-    icon: ImageVector? = null,
-    painter: Painter? = null
-) {
-    require(icon != null || painter != null) { "Either icon or painter must be provided" }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A2E))
-            .padding(16.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            when {
-                icon != null -> Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
-
-                painter != null -> Icon(
-                    painter = painter,
-                    contentDescription = label,
-                    modifier = Modifier.size(20.dp),
-                    tint = iconTint
-                )
-            }
-            Column {
-                Text(
-                    text = label,
-                    fontFamily = karlaFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    color = Color(0xFF8F8F96)
-                )
-                Text(
-                    text = value,
-                    fontFamily = funnelFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ModernTimeSelection(
-    label: String,
-    icon: Painter,
-    iconTint: Color = Color(0xFF64B5F6),
     hourValue: String,
     onHourChange: (String) -> Unit,
     minuteValue: String,
     onMinuteChange: (String) -> Unit,
     meridianValue: String,
-    onMeridianChange: (String) -> Unit
+    onMeridianChange: (String) -> Unit,
+    iconTint: Color
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A2E))
-            .padding(16.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF28282C)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Label with icon
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.width(80.dp)
+                .padding(12.dp)
         ) {
             Icon(
-                painter = icon,
+                painter = painterResource(id = R.drawable.schedule),
                 contentDescription = label,
                 tint = iconTint,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = label,
+                color = Color.White,
                 fontFamily = karlaFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                color = Color(0xFF8F8F96)
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+        // Time inputs
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.weight(1f)
+                .padding(6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // Hour input
             OutlinedTextField(
@@ -693,27 +692,28 @@ fun ModernTimeSelection(
                 placeholder = {
                     Text(
                         text = "HH",
-                        fontFamily = funnelFont,
-                        fontSize = 16.sp,
-                        color = Color(0xFF8F8F96)
+                        fontFamily = karlaFont,
+                        fontSize = 14.sp,
+                        color = Color(0xFF8E8E93),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
                 textStyle = TextStyle(
-                    fontFamily = funnelFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontFamily = karlaFont,
+                    fontSize = 16.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(48.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = iconTint,
-                    unfocusedBorderColor = Color(0xFF3A3A3F),
-                    cursorColor = iconTint,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    unfocusedBorderColor = Color(0xFF3C3C3E),
+                    cursorColor = Color.White,
+                    focusedContainerColor = Color(0xFF28282C),
+                    unfocusedContainerColor = Color(0xFF28282C)
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
@@ -721,10 +721,10 @@ fun ModernTimeSelection(
 
             Text(
                 text = ":",
-                fontFamily = funnelFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                color = Color.White
+                color = Color.White,
+                fontFamily = karlaFont,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
             )
 
             // Minute input
@@ -734,61 +734,84 @@ fun ModernTimeSelection(
                 placeholder = {
                     Text(
                         text = "MM",
-                        fontFamily = funnelFont,
-                        fontSize = 16.sp,
-                        color = Color(0xFF8F8F96)
+                        fontFamily = karlaFont,
+                        fontSize = 14.sp,
+                        color = Color(0xFF8E8E93),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
                 textStyle = TextStyle(
-                    fontFamily = funnelFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                    fontFamily = karlaFont,
+                    fontSize = 16.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp),
+                    .height(48.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = iconTint,
-                    unfocusedBorderColor = Color(0xFF3A3A3F),
-                    cursorColor = iconTint,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    unfocusedBorderColor = Color(0xFF3C3C3E),
+                    cursorColor = Color.White,
+                    focusedContainerColor = Color(0xFF28282C),
+                    unfocusedContainerColor = Color(0xFF28282C)
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
             )
 
             // AM/PM selector
-            val meridianOptions = listOf("AM", "PM")
             var meridianExpanded by remember { mutableStateOf(false) }
-
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .border(1.dp, Color(0xFF3A3A3F), RoundedCornerShape(4.dp))
-                    .clickable { meridianExpanded = true },
-                contentAlignment = Alignment.Center
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = meridianValue,
-                    fontFamily = funnelFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, Color(0xFF3C3C3E)),
+                    color = Color(0xFF28282C),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clickable { meridianExpanded = true }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .offset(x = (-3).dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Empty spacer to balance the layout
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // AM/PM text
+                        Text(
+                            text = meridianValue,
+                            fontFamily = karlaFont,
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
+
+                        // Dropdown arrow
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowDropDown,
+                            contentDescription = "Select AM/PM",
+                            tint = Color(0xFFABABAF),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
 
                 DropdownMenu(
                     expanded = meridianExpanded,
                     onDismissRequest = { meridianExpanded = false },
                     modifier = Modifier
                         .width(100.dp)
-                        .background(Color(0xFF2A2A2E))
+                        .background(Color(0xFF28282C))
                 ) {
-                    meridianOptions.forEach { option ->
+                    listOf("AM", "PM").forEach { option ->
                         DropdownMenuItem(
                             onClick = {
                                 onMeridianChange(option)
@@ -797,17 +820,58 @@ fun ModernTimeSelection(
                             text = {
                                 Text(
                                     text = option,
-                                    fontFamily = funnelFont,
-                                    fontSize = 18.sp,
                                     color = Color.White,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center
+                                    fontFamily = karlaFont,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+fun BookingSummaryItemTeacher(
+    image: Painter,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            painter = image,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp)
+                .aspectRatio(1f),
+            tint = Color(0xFFABABAF)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label.uppercase(),
+                fontFamily = karlaFont,
+                fontSize = 12.sp,
+                color = Color(0xFFABABAF),
+                letterSpacing = 0.5.sp
+            )
+
+            Text(
+                text = value,
+                fontFamily = oswaldFont,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
         }
     }
 }
@@ -832,7 +896,7 @@ suspend fun slotBookingRequest(
         class_date = requestList.classDate,
         start_time = requestList.startTime,
         end_time = requestList.endTime,
-        faculty_name = requestList.facultyName,
+        faculty_id = requestList.facultyId,
         classroom_id = requestList.classroomId,
         reason = requestList.reason
     )
@@ -843,7 +907,7 @@ suspend fun slotBookingRequest(
         }.decodeSingle<IdColumnVerify>()
         response.id
     } catch (e: Exception) {
-        println("Error during slot booking request ${e.localizedMessage}")
+        println("Error during slot booking request")
         null
     }
 }

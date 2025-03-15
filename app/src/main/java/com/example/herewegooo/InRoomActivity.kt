@@ -107,11 +107,11 @@ fun WeInRoom(
     var expanded by remember { mutableStateOf(false) }
 
     // Background and accent colors
-    val backgroundColor = Color(0xFF121218)
-    val headerColor = Color(0xFF1F2933)
-    val accentColor = Color(0xFF4F6BFF)
-    val dropDownListColor = Color(0xFF313780)
-    val buttonColor = Color(0xFF2A4D6E)
+    val backgroundColor = Color(0xFF1E1E2E)
+    val headerColor = Color(0xFF2A2A3C)
+    val accentColor = Color(0xFF9676DB)
+    val dropDownListColor = Color(0xFF3A3658)
+    val buttonColor = Color(0xFF4A3ABA)
     val textColor = Color.White
 
     // Date options setup
@@ -361,75 +361,6 @@ fun WeInRoom(
                         }
                     }
                 }
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    // Floor number
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        modifier = Modifier.offset(x = 70.dp)
-//                    ) {
-//                        Text(
-//                            text = "Floor",
-//                            color = textColor.copy(alpha = 0.8f),
-//                            fontFamily = funnelFont,
-//                            fontSize = 16.sp
-//                        )
-//
-//                        Box(
-//                            modifier = Modifier
-//                                .size(50.dp)
-//                                .clip(RoundedCornerShape(10.dp))
-//                                .background(accentColor),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = floor,
-//                                color = textColor,
-//                                fontFamily = funnelFont,
-//                                fontSize = 22.sp,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.width(24.dp))
-//
-//                    // Room number
-//                    Column(
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                        modifier = Modifier.offset(x = 120.dp)
-//                    ) {
-//                        Text(
-//                            text = "Room",
-//                            color = textColor.copy(alpha = 0.8f),
-//                            fontFamily = funnelFont,
-//                            fontSize = 16.sp
-//                        )
-//
-//                        Box(
-//                            modifier = Modifier
-//                                .width(80.dp)
-//                                .height(50.dp)
-//                                .clip(RoundedCornerShape(10.dp))
-//                                .background(accentColor),
-//                            contentAlignment = Alignment.Center
-//                        ) {
-//                            Text(
-//                                text = room,
-//                                color = textColor,
-//                                fontFamily = funnelFont,
-//                                fontSize = 22.sp,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.weight(1f))
-//                }
             }
         }
 
@@ -469,7 +400,8 @@ fun WeInRoom(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = selectedDate,
+                            text = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                .format(DateTimeFormatter.ofPattern("dd MMMM, yyyy")),
                             color = textColor,
                             fontFamily = funnelFont,
                             fontSize = 16.sp,
@@ -504,6 +436,8 @@ fun WeInRoom(
                             ) {
                                 Column (modifier = Modifier.width(270.dp)){
                                     dateOptions.forEach { date ->
+                                        val formattedDisplayDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                            .format(DateTimeFormatter.ofPattern("EEE, dd MMM"))
                                         DropdownMenuItem(
                                             onClick = {
                                                 selectedDate = date
@@ -511,10 +445,11 @@ fun WeInRoom(
                                             },
                                             text = {
                                                 Text(
-                                                    text = date,
+                                                    text = formattedDisplayDate,
                                                     color = Color.White,
                                                     fontFamily = funnelFont,
-                                                    fontSize = 15.sp,
+                                                    fontSize = if (date == selectedDate) 20.sp else 16.sp,
+                                                    fontWeight = if (date == selectedDate) FontWeight.Bold else FontWeight.Normal,
                                                     modifier = Modifier.offset(x = 10.dp)
                                                 )
                                             }
@@ -536,7 +471,6 @@ fun WeInRoom(
                 .offset(y = (-4).dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = headerColor.copy(alpha = 0.6f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -934,12 +868,4 @@ suspend fun generateEvent(
     val events: List<Event> = rawEvents.map { it.toEvent() }
 
     return events
-    //    ---------------------
 }
-//    Event(
-//        startTime = LocalTime.of(7, 50),
-//        endTime = LocalTime.of(8, 40),
-//        title = "1st Period",
-//        facultyName = "Dr Sanjeev Kumar",
-//        color = Color(0xFF2196F3)
-//    ),

@@ -90,7 +90,7 @@ fun BottomNavBar(
         )
         else -> listOf(
             NavItem(label = "Home", icon = Icons.Default.Home, forRoute = "Home"),
-            NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
+//            NavItem(label = "Time Table", icon = Icons.Default.Menu, forRoute = "Timetable"),
             NavItem(label = "Profile", icon = Icons.Default.Person, forRoute = "Profile"),
         )
     }
@@ -175,7 +175,6 @@ fun BottomNavBar(
                             .weight(1f)
                             .clickable {
                                 if (index != safeSelectedIndex) {
-                                    Log.d("BottomNavBar", "Clicked item: ${item.label} at index: $index")
                                     onItemSelected(index, item)
                                 }
                             }

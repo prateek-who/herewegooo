@@ -1,6 +1,7 @@
 package com.example.herewegooo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -111,6 +112,8 @@ import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.Event
 import com.example.herewegooo.network.RawEvent
 import com.example.herewegooo.network.ReceiveRequests
+import com.example.herewegooo.network.RequestWithFacultyName
+import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.supabaseClient
 import com.example.herewegooo.network.toEvent
 import com.example.herewegooo.ui.theme.HerewegoooTheme
@@ -139,7 +142,7 @@ fun AdminPanel(
     var refreshCounter by remember { mutableIntStateOf(0) }
     var isRefreshing by remember { mutableStateOf(false) }
     var lastRefreshTime by remember { mutableLongStateOf(0L) }
-    var requests by remember { mutableStateOf<List<ReceiveRequests>>(emptyList()) }
+    var requests by remember { mutableStateOf<List<RequestWithFacultyName>>(emptyList()) }
 
     // Add a rotation animation state
     var rotationAngle by remember { mutableFloatStateOf(0f) }
@@ -267,7 +270,6 @@ fun AdminPanel(
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
-//                        delay(500)
                     }
                 }
             }
@@ -319,7 +321,7 @@ fun AdminPanel(
 
 @Composable
 fun RequestItem(
-    request: ReceiveRequests,
+    request: RequestWithFacultyName,
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -334,11 +336,11 @@ fun RequestItem(
 
     // Format dates
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)
-    val parsedDate = LocalDate.parse(request.class_date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    val parsedDate = LocalDate.parse(request.request.class_date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     val formattedDate = parsedDate.format(dateFormatter)
 
     //Time shit
-    val createdDateTime = LocalDateTime.parse(request.request_created, DateTimeFormatter.ISO_DATE_TIME)
+    val createdDateTime = LocalDateTime.parse(request.request.request_created, DateTimeFormatter.ISO_DATE_TIME)
     val istZone = ZoneId.of("Asia/Kolkata")
     val utcZone = ZoneId.of("UTC")
 
@@ -380,12 +382,37 @@ fun RequestItem(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
+                        modifier =
+                            if(isTomorrow){
+                            Modifier
+                                .height(48.dp)
+                                .width(80.dp)
+                                .background(
+                                    color =
+                                        if (isToday){
+                                            Color(0xFFFF0A0A)
+                                        }else if (isTomorrow){
+                                            Color(0xFFFF9800)
+                                        }else{
+                                            Color(0xFF2C2C30)
+                                        },
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                        } else {
+                        Modifier
                             .size(48.dp)
                             .background(
-                                color = if (isToday) Color(0xFFFF0A0A) else Color(0xFF2C2C30),
+                                color =
+                                    if (isToday) {
+                                        Color(0xFFFF0A0A)
+                                    } else if (isTomorrow) {
+                                        Color(0xFFFF9800)
+                                    } else {
+                                        Color(0xFF2C2C30)
+                                    },
                                 shape = RoundedCornerShape(8.dp)
-                            ),
+                            )
+                    },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -410,16 +437,34 @@ fun RequestItem(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column {
-                        Text(
-                            text = "${request.start_time.format(timeFormatter)} - ${request.end_time.format(timeFormatter)}",
-                            color = textColorPrimary,
-                            fontFamily = karlaFont,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isTomorrow) {
+                            Text(
+                                text = "${request.request.start_time.format(timeFormatter)} - ${
+                                    request.request.end_time.format(
+                                        timeFormatter
+                                    )
+                                }",
+                                color = textColorPrimary,
+                                fontFamily = karlaFont,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }else{
+                            Text(
+                                text = "${request.request.start_time.format(timeFormatter)} - ${
+                                    request.request.end_time.format(
+                                        timeFormatter
+                                    )
+                                }",
+                                color = textColorPrimary,
+                                fontFamily = karlaFont,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
                         Text(
-                            text = "Classroom ${request.classroom_id}",
+                            text = "Classroom ${request.request.classroom_id}",
                             color = textColorSecondary,
                             fontFamily = karlaFont,
                             fontSize = 14.sp
@@ -456,7 +501,7 @@ fun RequestItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = request.faculty_name,
+                    text = request.facultyName,
                     color = textColorPrimary,
                     fontFamily = karlaFont,
                     fontSize = 16.sp,
@@ -482,7 +527,7 @@ fun RequestItem(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = request.reason,
+                            text = request.request.reason,
                             color = textColorPrimary,
                             fontFamily = karlaFont,
                             fontSize = 16.sp,
@@ -586,11 +631,12 @@ fun RequestItem(
                         showApproveDialog = false
                         onRefresh()
                     },
-                    bookingDate = request.class_date,
-                    roomNumber = request.classroom_id.toString(),
-                    fromTime = request.start_time,
-                    toTime = request.end_time,
-                    facultyName = request.faculty_name,
+                    bookingDate = request.request.class_date,
+                    roomNumber = request.request.classroom_id.toString(),
+                    fromTime = request.request.start_time,
+                    toTime = request.request.end_time,
+                    facultyId = request.request.faculty_id,
+                    facultyName = request.facultyName,
                     onShowSnackbar = onShowSnackbar
                 )
             }
@@ -602,11 +648,12 @@ fun RequestItem(
                         showDenyDialog = false
                         onRefresh()
                     },
-                    bookingDate = request.class_date,
-                    roomNumber = request.classroom_id.toString(),
-                    fromTime = request.start_time,
-                    toTime = request.end_time,
-                    facultyName = request.faculty_name,
+                    bookingDate = request.request.class_date,
+                    roomNumber = request.request.classroom_id.toString(),
+                    fromTime = request.request.start_time,
+                    toTime = request.request.end_time,
+                    facultyId = request.request.faculty_id,
+                    facultyName = request.facultyName,
                     onShowSnackbar = onShowSnackbar
                 )
             }
@@ -614,8 +661,42 @@ fun RequestItem(
     }
 }
 
-suspend fun getRequests(client: SupabaseClient): List<ReceiveRequests> {
+
+suspend fun getNames(
+    client: SupabaseClient,
+    facultyId: String
+): String{
+    val name = client.from("users").select(columns = Columns.list("username")){
+        filter {
+            eq("user_id", facultyId)
+        }
+    }.decodeSingle<getFacultyName>()
+
+    return name.username
+}
+
+
+suspend fun getRequests(client: SupabaseClient): List<RequestWithFacultyName> {
+    val timeRightNow = LocalTime.now()
+    val dateRightNow = LocalDate.now()
+
     val rawList = client.from("requests").select(columns = Columns.ALL).decodeList<ReceiveRequests>()
 
-    return rawList
+    val futureRequests = rawList.filter { request ->
+        val requestedDate = LocalDate.parse(request.class_date)
+
+        when{
+            requestedDate.isAfter(dateRightNow) -> true
+            requestedDate.isEqual(dateRightNow) -> request.start_time.isAfter(timeRightNow)
+            else -> false
+        }
+    }
+
+    println(futureRequests)
+    return futureRequests.map { request ->
+        RequestWithFacultyName(
+            request = request,
+            facultyName = getNames(client, request.faculty_id)
+        )
+    }
 }

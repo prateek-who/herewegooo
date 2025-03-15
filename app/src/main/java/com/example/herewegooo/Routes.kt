@@ -157,7 +157,7 @@ fun AppNavigate(
         composable(
             route = "timetable"
         ) {
-            Timetable()
+            Timetable(userViewModel, onShowSnackbar)
         }
     }
 }
