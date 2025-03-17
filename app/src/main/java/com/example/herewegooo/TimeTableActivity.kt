@@ -8,6 +8,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,6 +57,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -176,123 +178,154 @@ fun Timetable(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                // Day of week display
-                val dayOfWeek = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                    .format(DateTimeFormatter.ofPattern("EEEE"))
-
-                Text(
-                    text = dayOfWeek.uppercase(),
-                    color = accentColor,
-                    fontFamily = funnelFont,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Date selector
+                // Date selector with integrated calendar button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                            .format(DateTimeFormatter.ofPattern("dd MMMM, yyyy")),
-                        color = textColor,
-                        fontFamily = funnelFont,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        // Day of week display
+                        val dayOfWeek = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                            .format(DateTimeFormatter.ofPattern("EEEE"))
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = dayOfWeek.uppercase(),
+                            color = accentColor,
+                            fontFamily = funnelFont,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
 
-                    // Date selector button
-                    Box {
-                        IconButton(
-                            onClick = { expanded = true },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(accentColor)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DateRange,
-                                contentDescription = "Select date",
-                                tint = textColor,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                        DropdownMenu(
-                            modifier = Modifier
-                                .background(dropDownListColor)
-                                .width(280.dp),
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            val itemHeight = 48.dp
-                            val maxHeight = 250.dp
-                            val totalHeight = (dateOptions.size * itemHeight).coerceAtMost(maxHeight)
+                        // Date display
+                        Text(
+                            text = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                .format(DateTimeFormatter.ofPattern("dd MMMM, yyyy")),
+                            color = textColor,
+                            fontFamily = funnelFont,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
-                            Box(
-                                modifier = Modifier
-                                    .height(totalHeight)
-                                    .verticalScroll(rememberScrollState())
-                            ) {
-                                Column {
-                                    dateOptions.forEach { date ->
-                                        val formattedDisplayDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                                            .format(DateTimeFormatter.ofPattern("EEE, dd MMM"))
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                selectedDate = date
-                                                expanded = false
-                                            },
-                                            text = {
-                                                Text(
-                                                    text = formattedDisplayDate,
-                                                    color = Color.White,
-                                                    fontFamily = funnelFont,
-                                                    fontSize = 16.sp,
-                                                    fontWeight = if (date == selectedDate) FontWeight.Bold else FontWeight.Normal
-                                                )
-                                            },
-                                            modifier = Modifier.background(
-                                                if (date == selectedDate) accentColor.copy(alpha = 0.2f) else Color.Transparent
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    // Calendar button - more subtle and integrated
+                    IconButton(
+                        onClick = { expanded = true },
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(42.dp)
+                            .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(accentColor.copy(alpha = 0.1f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select date",
+                            tint = accentColor,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
 
-                // Quick navigation buttons
+                // Quick navigation row - moved to top and restyled
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    QuickDateButton(
-                        text = "Today",
-                        color = accentColor,
-                        onClick = {
-                            selectedDate = dateOptions.first()
-                        }
-                    )
+                    // Today button
+                    OutlinedButton(
+                        onClick = { selectedDate = dateOptions.first() },
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, accentColor),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = accentColor,
+                            containerColor = if (selectedDate == dateOptions.first())
+                                accentColor.copy(alpha = 0.1f) else Color.Transparent
+                        ),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Text(
+                            text = "Today",
+                            fontFamily = funnelFont,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
 
-                    QuickDateButton(
-                        text = "Tomorrow",
-                        color = accentColor.copy(alpha = 0.8f),
-                        onClick = {
-                            if (dateOptions.size > 1) {
-                                selectedDate = dateOptions[1]
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Tomorrow button
+                    OutlinedButton(
+                        onClick = { if (dateOptions.size > 1) selectedDate = dateOptions[1] },
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = accentColor,
+                            containerColor = if (dateOptions.size > 1 && selectedDate == dateOptions[1])
+                                accentColor.copy(alpha = 0.1f) else Color.Transparent
+                        ),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Text(
+                            text = "Tomorrow",
+                            fontFamily = funnelFont,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // Dropdown menu implementation remains the same
+                Box (
+                    modifier = Modifier.offset(y = (-50).dp)
+                ){
+                    DropdownMenu(
+                        modifier = Modifier
+                            .background(dropDownListColor)
+                            .width(280.dp),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        // Existing dropdown implementation...
+                        val itemHeight = 48.dp
+                        val maxHeight = 250.dp
+                        val totalHeight = (dateOptions.size * itemHeight).coerceAtMost(maxHeight)
+
+                        Box(
+                            modifier = Modifier
+                                .height(totalHeight)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Column {
+                                dateOptions.forEach { date ->
+                                    val formattedDisplayDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                                        .format(DateTimeFormatter.ofPattern("EEE, dd MMM"))
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            selectedDate = date
+                                            expanded = false
+                                        },
+                                        text = {
+                                            Text(
+                                                text = formattedDisplayDate,
+                                                color = Color.White,
+                                                fontFamily = funnelFont,
+                                                fontSize = if (date == selectedDate) 20.sp else 16.sp,
+                                                fontWeight = if (date == selectedDate) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                        },
+                                        modifier = Modifier.background(
+                                            if (date == selectedDate) accentColor.copy(alpha = 0.2f) else Color.Transparent
+                                        )
+                                    )
+                                }
                             }
                         }
-                    )
+                    }
                 }
             }
         }
@@ -366,7 +399,7 @@ fun Timetable(
 
                     StatItem(
                         title = "Total Hours",
-                        value = "${calculateTotalHours(classes)}",
+                        value = calculateTotalHours(classes),
                         painter = painterResource(id = R.drawable.time), //Timer
                         color = accentColor.copy(alpha = 0.8f)
                     )
@@ -751,12 +784,12 @@ fun StatusChip(text: String) {
 
 
 // Helper function to calculate total hours of classes
-private fun calculateTotalHours(classes: List<Period>): Float {
+private fun calculateTotalHours(classes: List<Period>): String {
     var totalMinutes = 0f
     classes.forEach { classEvent ->
         totalMinutes += Duration.between(classEvent.startTime, classEvent.endTime).toMinutes()
     }
-    return (totalMinutes / 60).toFloat()
+    return "%.2f".format(totalMinutes / 60)
 }
 
 

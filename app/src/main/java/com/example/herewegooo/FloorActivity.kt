@@ -72,8 +72,8 @@ fun MainScreen(navController: NavController) {
     val buttonTextColor = Color(0xFFF0F0F5)
 
     val gradientColorChoice = listOf(
-        Color(0xFF121218),
-        Color(0xFF121218),
+        Color(0xFF1E1E2E),
+        Color(0xFF1E1E2E),
 //        Color(0xFF6D9773),
     )
     val gradientBackground = Brush.verticalGradient(

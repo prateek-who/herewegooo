@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -152,83 +153,97 @@ fun WeInRoom(
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             if (userViewModel.userRole == "teacher" || userViewModel.userRole == "admin") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Floor number
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Floor",
-                        color = textColor.copy(alpha = 0.8f),
-                        fontFamily = funnelFont,
-                        fontSize = 16.sp
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(accentColor),
-                        contentAlignment = Alignment.Center
+                    // Location information group
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = floor,
-                            color = textColor,
-                            fontFamily = funnelFont,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // Floor number
+                        Column(
+                            modifier = Modifier.offset(x = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Floor",
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = funnelFont,
+                                fontSize = 14.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = floor,
+                                    color = textColor,
+                                    fontFamily = funnelFont,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(20.dp))
+
+                        // Room number
+                        Column(
+                            modifier = Modifier.offset(x = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Room",
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = funnelFont,
+                                fontSize = 14.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .width(76.dp)
+                                    .height(46.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = room,
+                                    color = textColor,
+                                    fontFamily = funnelFont,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(24.dp))
-
-                // Room number
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Room",
-                        color = textColor.copy(alpha = 0.8f),
-                        fontFamily = funnelFont,
-                        fontSize = 16.sp
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(accentColor),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = room,
-                            color = textColor,
-                            fontFamily = funnelFont,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Book slot button (only for teachers and admins)
+                    // Book slot button (only for teachers and admins)
                     Button(
                         onClick = { showDialog = true },
                         modifier = Modifier
-                            .height(80.dp)
-                            .padding(start = 8.dp)
-                            .offset(y = (-3).dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                            .height(46.dp)
+                            .padding(start = 16.dp)
+                            .offset(y = 11.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accentColor
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -236,14 +251,15 @@ fun WeInRoom(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Book slot",
-                                tint = textColor
+                                tint = textColor,
+                                modifier = Modifier.size(18.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Book Slot",
                                 fontFamily = funnelFont,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
@@ -256,31 +272,12 @@ fun WeInRoom(
                         .clip(RoundedCornerShape(16.dp))
                         .background(headerColor)
                         .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Building icon
-//                    Box(
-//                        modifier = Modifier
-//                            .size(48.dp)
-//                            .clip(CircleShape)
-//                            .background(accentColor.copy(alpha = 0.2f)),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Rounded.Home,
-//                            contentDescription = "Building",
-//                            tint = accentColor,
-//                            modifier = Modifier.size(28.dp)
-//                        )
-//                    }
-
-                    Spacer(modifier = Modifier.width(20.dp))
-
                     // Location information
                     Column(
                         modifier = Modifier.weight(1f)
-                            .offset(x = (-15).dp)
                     ) {
                         Text(
                             text = "Current Location",
@@ -288,6 +285,8 @@ fun WeInRoom(
                             fontFamily = funnelFont,
                             fontSize = 14.sp
                         )
+
+                        Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
                             text = "Jain University",
@@ -298,66 +297,73 @@ fun WeInRoom(
                         )
                     }
 
-                    // Floor number
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .offset(x = (-6).dp)
+                    // Location indicators container
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Floor",
-                            color = textColor.copy(alpha = 0.8f),
-                            fontFamily = funnelFont,
-                            fontSize = 16.sp
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(accentColor)
-                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
+                        // Floor number
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = floor,
-                                color = textColor,
+                                text = "Floor",
+                                color = textColor.copy(alpha = 0.7f),
                                 fontFamily = funnelFont,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 14.sp
                             )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = floor,
+                                    color = textColor,
+                                    fontFamily = funnelFont,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
 
-                    // Room number
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            text = "Room",
-                            color = textColor.copy(alpha = 0.8f),
-                            fontFamily = funnelFont,
-                            fontSize = 16.sp
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .width(80.dp)
-                                .height(50.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(accentColor)
-                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
+                        // Room number
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = room,
-                                color = textColor,
+                                text = "Room",
+                                color = textColor.copy(alpha = 0.7f),
                                 fontFamily = funnelFont,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 14.sp
                             )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .width(76.dp)
+                                    .height(46.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = room,
+                                    color = textColor,
+                                    fontFamily = funnelFont,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -452,7 +458,10 @@ fun WeInRoom(
                                                     fontWeight = if (date == selectedDate) FontWeight.Bold else FontWeight.Normal,
                                                     modifier = Modifier.offset(x = 10.dp)
                                                 )
-                                            }
+                                            },
+                                            modifier = Modifier.background(
+                                                if (date == selectedDate) accentColor.copy(alpha = 0.2f) else Color.Transparent
+                                            )
                                         )
                                     }
                                 }

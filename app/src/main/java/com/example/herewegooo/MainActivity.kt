@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -62,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathSegment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -109,6 +112,10 @@ val newsReaderFont = FontFamily(
 
 val stixtwoFont = FontFamily(
     Font(R.font.stixtwotext_variablefont)
+)
+
+val bungeeFont = FontFamily(
+    Font(R.font.bungeehairline_regular)
 )
 
 
@@ -170,7 +177,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                         .imePadding(),
-                    containerColor = Color(0xFF121218),
+                    containerColor = Color(0xFF1E1E2E).copy(alpha = 1f),
                     snackbarHost = {
                         SnackbarHost(snackbarHostState) { data ->
                             val contentColor = if (snackbarType.value == SnackbarType.ERROR) Color(0xFFFF3B30) else Color(0xFF34C759)
@@ -202,7 +209,17 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
+                    Box(modifier = Modifier.padding(
+                            // Only apply bottom padding when the bottom bar is showing
+                            bottom = if (currentRoute != "starthere" && currentRoute != null)
+                                innerPadding.calculateBottomPadding()
+                            else
+                                0.dp,
+                            // Keep other padding values
+                            top = innerPadding.calculateTopPadding(),
+                            start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
+                            end = innerPadding.calculateEndPadding(LocalLayoutDirection.current)
+                    )) {
                         AppNavigate(
                             navController = navController,
                             modifier = Modifier,

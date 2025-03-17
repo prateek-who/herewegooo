@@ -27,8 +27,8 @@ import androidx.navigation.NavController
 @Composable
 fun EightFloor(navController: NavController, floor: String){
     val gradientColorChoice = listOf(
-        Color(0xFF121218),
-        Color(0xFF121218),
+        Color(0xFF1E1E2E),
+        Color(0xFF1E1E2E),
 //        Color(0xFF0C3B2E),
 //        Color(0xFF0A4B38),
     )
@@ -43,7 +43,9 @@ fun EightFloor(navController: NavController, floor: String){
 
     val roomNumbers = mutableListOf(
         "801", "802", "803", "804","805", "806",
-        "807", "808", "809", "810","811", "812"
+        "807", "808", "809", "810","811", "812",
+        "813", "814","815", "816", "817", "818",
+        "819", "820", "821", "822", "823", "824",
     )
 
     val actualRooms = mutableListOf<String>()

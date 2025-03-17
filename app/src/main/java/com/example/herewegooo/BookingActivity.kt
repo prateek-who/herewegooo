@@ -33,6 +33,8 @@ import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -52,10 +54,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -127,6 +131,16 @@ fun BookingDialog(
     }
     val formattedDisplayDate = parsedDate.format(displayDateFormatter)
 
+    // Colors matching login screen
+    val backgroundColor = Color(0xFF1E1E2E)    // Deep blue background
+    val cardBackground = Color(0xFF272C3D)     // Slightly brighter card background
+    val accentColor = Color(0xFF9676DB)        // Bright blue/purple accent
+    val buttonColor = Color(0xFF16B1AC)        // Teal button color
+    val textColor = Color(0xFFF8F8FF)          // Bright white text
+    val highlightColor = Color(0xFF72F2EB)     // Teal highlight color
+    val unfocusedFieldColor = Color(0xFF1E2239) // Darker field background
+    val focusedFieldColor = Color(0xFF222845)   // Slightly lighter field background
+
     val client = supabaseClient()
 
     if (openDialog) {
@@ -138,45 +152,58 @@ fun BookingDialog(
             )
         ) {
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF1E1E22),
+                shape = RoundedCornerShape(20.dp),
+                color = backgroundColor,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 750.dp)
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(16.dp))
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(20.dp),
+                        spotColor = accentColor.copy(alpha = 0.4f)
+                    ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            highlightColor.copy(alpha = 0.4f),
+                            accentColor.copy(alpha = 0.4f)
+                        )
+                    )
+                )
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Modern gradient header
+                    // Gradient header
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFF1976D2),  // Darker blue
-                                        Color(0xFF64B5F6)   // Lighter blue
-                                    )
-                                )
-                            )
-                            .padding(vertical = 16.dp, horizontal = 24.dp),
+                            .background(cardBackground)  // Use cardBackground instead of gradient
+                            .padding(vertical = 20.dp, horizontal = 24.dp)
+                            .border(
+                                width = 0.dp,  // Remove border or make it subtle
+                                color = Color.Transparent,
+                                shape = RectangleShape
+                            ),
                         contentAlignment = Alignment.Center
                     ){
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Image(
+                            Icon(
                                 painter = painterResource(id = R.drawable.schedule),
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
+                                tint = accentColor  // Use accent color instead of white
                             )
                             Text(
                                 text = "Book Your Slot",
-                                color = Color.White,
-                                fontFamily = oswaldFont,
+                                color = textColor,
+                                fontFamily = bungeeFont,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                letterSpacing = 0.5.sp,
+                                // Simplified text styling - removed shadow effect
                             )
                         }
                     }
@@ -189,23 +216,36 @@ fun BookingDialog(
                             .verticalScroll(rememberScrollState())
                             .padding(bottom = 16.dp)
                     ) {
-                        // Room info
-                        Box(
+                        // Room info card with enhanced styling
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF242428))
-                                .padding(14.dp)
-                                .height(45.dp)
+                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                                .shadow(6.dp, RoundedCornerShape(16.dp)),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = cardBackground
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        highlightColor.copy(alpha = 0.3f),
+                                        accentColor.copy(alpha = 0.3f)
+                                    )
+                                )
+                            )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.padding(16.dp)
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.room),
                                     contentDescription = "Room Icon",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFABABAF)
+                                    modifier = Modifier.size(22.dp),
+                                    tint = highlightColor
                                 )
 
                                 Column(
@@ -215,16 +255,16 @@ fun BookingDialog(
                                         text = "ROOM",
                                         fontFamily = karlaFont,
                                         fontSize = 12.sp,
-                                        color = Color(0xFFABABAF),
+                                        color = textColor.copy(alpha = 0.6f),
                                         letterSpacing = 0.5.sp
                                     )
 
                                     Text(
                                         text = "Classroom $roomNumber",
-                                        fontFamily = oswaldFont,
+                                        fontFamily = karlaFont,
                                         fontSize = 20.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.White
+                                        fontWeight = FontWeight.Bold,
+                                        color = textColor
                                     )
                                 }
                             }
@@ -234,16 +274,16 @@ fun BookingDialog(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
                                 text = "SELECT DATE",
-                                color = Color(0xFFABABAF),
-                                fontFamily = oswaldFont,
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = karlaFont,
                                 fontSize = 12.sp,
                                 letterSpacing = 1.sp,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
 
                             Box(modifier = Modifier.fillMaxWidth()) {
@@ -251,24 +291,26 @@ fun BookingDialog(
                                     value = formattedDisplayDate,
                                     onValueChange = { },
                                     enabled = false,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .shadow(4.dp, RoundedCornerShape(12.dp)),
+                                    shape = RoundedCornerShape(12.dp),
                                     textStyle = TextStyle(
                                         fontFamily = karlaFont,
                                         fontSize = 16.sp,
-                                        color = Color(0xFFFAFAFA)
+                                        color = textColor
                                     ),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        disabledBorderColor = Color(0xFF3C3C3E),
-                                        disabledContainerColor = Color(0xFF28282C),
-                                        disabledTextColor = Color(0xFFFAFAFA)
+                                        disabledBorderColor = accentColor.copy(alpha = 0.4f),
+                                        disabledContainerColor = unfocusedFieldColor,
+                                        disabledTextColor = textColor
                                     ),
                                     trailingIcon = {
                                         IconButton(onClick = { expanded = true }) {
                                             Icon(
                                                 imageVector = Icons.Rounded.ArrowDropDown,
                                                 contentDescription = "Select Date",
-                                                tint = Color(0xFFABABAF)
+                                                tint = accentColor
                                             )
                                         }
                                     },
@@ -276,11 +318,12 @@ fun BookingDialog(
                                         Icon(
                                             painter = painterResource(id = R.drawable.calendartoda),
                                             contentDescription = "Calendar",
-                                            tint = Color(0xFF64B5F6),
-                                            modifier = Modifier.size(18.dp)
+                                            tint = highlightColor,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
                                 )
+
                                 // Make the whole field clickable
                                 Box(
                                     modifier = Modifier
@@ -293,8 +336,7 @@ fun BookingDialog(
                                     onDismissRequest = { expanded = false },
                                     modifier = Modifier
                                         .fillMaxWidth(0.9f)
-                                        .heightIn(max = 250.dp)
-                                        .background(Color(0xFF28282C)),
+                                        .background(cardBackground),
                                     properties = PopupProperties(focusable = false)
                                 ) {
                                     dateOptions.forEach { date ->
@@ -313,7 +355,7 @@ fun BookingDialog(
                                             text = {
                                                 Text(
                                                     text = formattedOptionDate,
-                                                    color = Color.White,
+                                                    color = textColor,
                                                     fontFamily = karlaFont,
                                                     fontSize = 16.sp
                                                 )
@@ -329,16 +371,16 @@ fun BookingDialog(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 18.dp),
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ){
                             Text(
                                 text = "SELECT TIME",
-                                color = Color(0xFFABABAF),
-                                fontFamily = oswaldFont,
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = karlaFont,
                                 fontSize = 12.sp,
                                 letterSpacing = 1.sp,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
 
                             // From Time row
@@ -370,7 +412,11 @@ fun BookingDialog(
                                 },
                                 meridianValue = fromMeridianEntry,
                                 onMeridianChange = { fromMeridianEntry = it },
-                                iconTint = Color(0xFF64B5F6)
+                                iconTint = buttonColor,
+                                unfocusedFieldColor = unfocusedFieldColor,
+                                focusedFieldColor = focusedFieldColor,
+                                accentColor = accentColor,
+                                textColor = textColor
                             )
 
                             // To Time row
@@ -402,21 +448,40 @@ fun BookingDialog(
                                 },
                                 meridianValue = toMeridianEntry,
                                 onMeridianChange = { toMeridianEntry = it },
-                                iconTint = Color(0xFFFF7043)
+                                iconTint = accentColor,
+                                unfocusedFieldColor = unfocusedFieldColor,
+                                focusedFieldColor = focusedFieldColor,
+                                accentColor = accentColor,
+                                textColor = textColor
                             )
                         }
 
                         // Faculty info section
-                        Box(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF242428))
-                                .padding(16.dp)
+                                .padding(horizontal = 24.dp, vertical = 16.dp)
+                                .shadow(6.dp, RoundedCornerShape(16.dp)),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = cardBackground
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        accentColor.copy(alpha = 0.3f),
+                                        buttonColor.copy(alpha = 0.3f)
+                                    )
+                                )
+                            )
                         ) {
                             BookingSummaryItemTeacher(
                                 image = painterResource(id = R.drawable.person),
                                 label = "Faculty",
-                                value = user.userName
+                                value = user.userName,
+                                textColor = textColor,
+                                accentColor = highlightColor
                             )
                         }
 
@@ -429,11 +494,11 @@ fun BookingDialog(
                         ) {
                             Text(
                                 text = "REASON FOR BOOKING",
-                                color = Color(0xFFABABAF),
-                                fontFamily = oswaldFont,
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = karlaFont,
                                 fontSize = 12.sp,
                                 letterSpacing = 1.sp,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
 
                             OutlinedTextField(
@@ -441,33 +506,34 @@ fun BookingDialog(
                                 onValueChange = { reason = it },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = 120.dp),
-                                shape = RoundedCornerShape(8.dp),
+                                    .heightIn(min = 120.dp)
+                                    .shadow(4.dp, RoundedCornerShape(12.dp)),
+                                shape = RoundedCornerShape(12.dp),
                                 textStyle = TextStyle(
                                     fontFamily = karlaFont,
                                     fontSize = 16.sp,
-                                    color = Color(0xFFFAFAFA)
+                                    color = textColor
                                 ),
                                 placeholder = {
                                     Text(
                                         text = "Enter reason for booking",
                                         fontFamily = karlaFont,
-                                        color = Color(0xFF8E8E93)
+                                        color = textColor.copy(alpha = 0.5f)
                                     )
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    cursorColor = Color(0xFFFAFAFA),
-                                    focusedBorderColor = Color(0xFF5E5CE6),
-                                    unfocusedBorderColor = Color(0xFF3C3C3E),
-                                    focusedContainerColor = Color(0xFF28282C),
-                                    unfocusedContainerColor = Color(0xFF28282C)
+                                    cursorColor = highlightColor,
+                                    focusedBorderColor = accentColor,
+                                    unfocusedBorderColor = accentColor.copy(alpha = 0.4f),
+                                    focusedContainerColor = focusedFieldColor,
+                                    unfocusedContainerColor = unfocusedFieldColor
                                 ),
                                 leadingIcon = {
                                     Icon(
                                         painter = painterResource(id = R.drawable.description),
                                         contentDescription = "Reason",
-                                        tint = Color(0xFF81C784),
-                                        modifier = Modifier.size(16.dp)
+                                        tint = highlightColor,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             )
@@ -478,16 +544,28 @@ fun BookingDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ){
-                        OutlinedButton(
+                        Button(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFF3C3C3E)),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color.White
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp)
+                                .shadow(4.dp, RoundedCornerShape(12.dp)),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = unfocusedFieldColor,
+                                contentColor = textColor
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        accentColor.copy(alpha = 0.3f),
+                                        buttonColor.copy(alpha = 0.3f)
+                                    )
+                                )
                             )
                         ) {
                             Text(
@@ -497,6 +575,7 @@ fun BookingDialog(
                                 fontWeight = FontWeight.Medium
                             )
                         }
+
                         Button(
                             onClick = {
                                 val fromHour = fromHourEntry.toIntOrNull()
@@ -604,30 +683,46 @@ fun BookingDialog(
                                     }
                                 }
                             },
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .weight(1.5f)
+                                .height(52.dp)
+                                .shadow(8.dp, RoundedCornerShape(12.dp)),
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1976D2)
-                            )
+                                containerColor = Color.Transparent,
+                                contentColor = textColor
+                            ),
+                            contentPadding = PaddingValues(0.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ){
-                                Icon(
-                                    imageVector = Icons.Rounded.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(accentColor, accentColor)
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ){
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.schedule),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
 
-                                Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
 
-                                Text(
-                                    text = "Book Slot",
-                                    fontFamily = karlaFont,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
+                                    Text(
+                                        text = "Book Slot",
+                                        fontFamily = karlaFont,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -646,188 +741,206 @@ fun TimeSelectionRow(
     onMinuteChange: (String) -> Unit,
     meridianValue: String,
     onMeridianChange: (String) -> Unit,
-    iconTint: Color
+    iconTint: Color,
+    unfocusedFieldColor: Color,
+    focusedFieldColor: Color,
+    accentColor: Color,
+    textColor: Color
 ) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF28282C)),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = unfocusedFieldColor
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = accentColor.copy(alpha = 0.3f)
+        )
     ) {
-        // Label with icon
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.width(80.dp)
-                .padding(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.schedule),
-                contentDescription = label,
-                tint = iconTint,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = label,
-                color = Color.White,
-                fontFamily = karlaFont,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        // Time inputs
-        Row(
-            modifier = Modifier.weight(1f)
-                .padding(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // Hour input
-            OutlinedTextField(
-                value = hourValue,
-                onValueChange = onHourChange,
-                placeholder = {
-                    Text(
-                        text = "HH",
-                        fontFamily = karlaFont,
-                        fontSize = 14.sp,
-                        color = Color(0xFF8E8E93),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                textStyle = TextStyle(
-                    fontFamily = karlaFont,
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                ),
+            // Label with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = iconTint,
-                    unfocusedBorderColor = Color(0xFF3C3C3E),
-                    cursorColor = Color.White,
-                    focusedContainerColor = Color(0xFF28282C),
-                    unfocusedContainerColor = Color(0xFF28282C)
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
-
-            Text(
-                text = ":",
-                color = Color.White,
-                fontFamily = karlaFont,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            // Minute input
-            OutlinedTextField(
-                value = minuteValue,
-                onValueChange = onMinuteChange,
-                placeholder = {
-                    Text(
-                        text = "MM",
-                        fontFamily = karlaFont,
-                        fontSize = 14.sp,
-                        color = Color(0xFF8E8E93),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                textStyle = TextStyle(
-                    fontFamily = karlaFont,
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = iconTint,
-                    unfocusedBorderColor = Color(0xFF3C3C3E),
-                    cursorColor = Color.White,
-                    focusedContainerColor = Color(0xFF28282C),
-                    unfocusedContainerColor = Color(0xFF28282C)
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
-
-            // AM/PM selector
-            var meridianExpanded by remember { mutableStateOf(false) }
-            Box(
-                modifier = Modifier.weight(1f)
+                    .width(80.dp)
+                    .padding(horizontal = 8.dp)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, Color(0xFF3C3C3E)),
-                    color = Color(0xFF28282C),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable { meridianExpanded = true }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .offset(x = (-3).dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // Empty spacer to balance the layout
-                        Spacer(modifier = Modifier.width(16.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.schedule),
+                    contentDescription = label,
+                    tint = iconTint,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = label,
+                    color = textColor,
+                    fontFamily = karlaFont,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
-                        // AM/PM text
+            // Time inputs
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Hour input
+                OutlinedTextField(
+                    value = hourValue,
+                    onValueChange = onHourChange,
+                    placeholder = {
                         Text(
-                            text = meridianValue,
+                            text = "HH",
                             fontFamily = karlaFont,
-                            fontSize = 16.sp,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
+                            fontSize = 14.sp,
+                            color = textColor.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
-
-                        // Dropdown arrow
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowDropDown,
-                            contentDescription = "Select AM/PM",
-                            tint = Color(0xFFABABAF),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                DropdownMenu(
-                    expanded = meridianExpanded,
-                    onDismissRequest = { meridianExpanded = false },
+                    },
+                    textStyle = TextStyle(
+                        fontFamily = karlaFont,
+                        fontSize = 16.sp,
+                        color = textColor,
+                        textAlign = TextAlign.Center
+                    ),
                     modifier = Modifier
-                        .width(100.dp)
-                        .background(Color(0xFF28282C))
-                ) {
-                    listOf("AM", "PM").forEach { option ->
-                        DropdownMenuItem(
-                            onClick = {
-                                onMeridianChange(option)
-                                meridianExpanded = false
-                            },
-                            text = {
-                                Text(
-                                    text = option,
-                                    color = Color.White,
-                                    fontFamily = karlaFont,
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = iconTint,
+                        unfocusedBorderColor = accentColor.copy(alpha = 0.4f),
+                        cursorColor = textColor,
+                        focusedContainerColor = focusedFieldColor,
+                        unfocusedContainerColor = unfocusedFieldColor
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                Text(
+                    text = ":",
+                    color = textColor,
+                    fontFamily = karlaFont,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                // Minute input
+                OutlinedTextField(
+                    value = minuteValue,
+                    onValueChange = onMinuteChange,
+                    placeholder = {
+                        Text(
+                            text = "MM",
+                            fontFamily = karlaFont,
+                            fontSize = 14.sp,
+                            color = textColor.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
+                    },
+                    textStyle = TextStyle(
+                        fontFamily = karlaFont,
+                        fontSize = 16.sp,
+                        color = textColor,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = iconTint,
+                        unfocusedBorderColor = accentColor.copy(alpha = 0.4f),
+                        cursorColor = textColor,
+                        focusedContainerColor = focusedFieldColor,
+                        unfocusedContainerColor = unfocusedFieldColor
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(8.dp)
+                )
+
+                // AM/PM selector
+                var meridianExpanded by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.4f)),
+                        color = unfocusedFieldColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { meridianExpanded = true }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            // AM/PM text
+                            Text(
+                                text = meridianValue,
+                                fontFamily = karlaFont,
+                                fontSize = 16.sp,
+                                color = textColor,
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Dropdown arrow
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowDropDown,
+                                contentDescription = "Select AM/PM",
+                                tint = accentColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = meridianExpanded,
+                        onDismissRequest = { meridianExpanded = false },
+                        modifier = Modifier
+                            .width(100.dp)
+                            .background(unfocusedFieldColor)
+                    ) {
+                        listOf("AM", "PM").forEach { option ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    onMeridianChange(option)
+                                    meridianExpanded = false
+                                },
+                                text = {
+                                    Text(
+                                        text = option,
+                                        color = textColor,
+                                        fontFamily = karlaFont,
+                                        fontSize = 16.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -840,18 +953,24 @@ fun TimeSelectionRow(
 fun BookingSummaryItemTeacher(
     image: Painter,
     label: String,
-    value: String
+    value: String,
+    textColor: Color = Color.White,
+    accentColor: Color = Color(0xFF72F2EB)
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
         Icon(
             painter = image,
             contentDescription = null,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier
+                .size(22.dp)
                 .aspectRatio(1f),
-            tint = Color(0xFFABABAF)
+            tint = accentColor
         )
 
         Column(
@@ -861,16 +980,17 @@ fun BookingSummaryItemTeacher(
                 text = label.uppercase(),
                 fontFamily = karlaFont,
                 fontSize = 12.sp,
-                color = Color(0xFFABABAF),
-                letterSpacing = 0.5.sp
+                color = textColor.copy(alpha = 0.6f),
+                letterSpacing = 0.5.sp,
+                fontWeight = FontWeight.Medium
             )
 
             Text(
                 text = value,
-                fontFamily = oswaldFont,
+                fontFamily = karlaFont, // Changed from oswaldFont to match login screen
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
+                fontWeight = FontWeight.Bold,
+                color = textColor
             )
         }
     }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,7 +50,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -86,6 +84,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -141,10 +140,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ModifierInfo
@@ -199,12 +201,12 @@ fun Login(
     var isLoading by remember { mutableStateOf(false) }
 
     // More vibrant color scheme
-    val backgroundColor = Color(0xFF161626)  // Deep blue background
+    val backgroundColor = Color(0xFF1E1E2E)  // Deep blue background
     val textColor = Color(0xFFF8F8FF)         // Bright white text
-    val accentColor = Color(0xFF4DA8DA)       // Bright blue accent
+    val accentColor = Color(0xFF9676DB)       // Bright blue accent
     val buttonColor = Color(0xFF16B1AC)       // Teal button color
     val cardBackground = Color(0xFF272C3D)    // Slightly brighter card background
-    val highlightColor = Color(0xFFFF7B89)    // Coral highlight for attention areas
+    val highlightColor = Color(0xFF72F2EB)    // Coral highlight for attention areas Color(0xFFFF7B89)
 
     // Updated field background colors to match the theme
     val unfocusedFieldColor = Color(0xFF1E2239)  // Darker version of cardBackground
@@ -237,46 +239,44 @@ fun Login(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Animated logo with gradient border
             Box(
                 modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-                    .border(
-                        width = 4.dp,
-                        brush = Brush.sweepGradient(
-                            listOf(
-                                accentColor,
-                                highlightColor,
-                                buttonColor,
-                                accentColor
-                            )
-                        ),
-                        shape = CircleShape
-                    )
-                    .shadow(10.dp, CircleShape),
+                    .size(200.dp)
+                    .offset(y = (-10).dp),
+//                    .border(
+//                        width = 4.dp,
+//                        brush = Brush.sweepGradient(
+//                            listOf(
+//                                accentColor,
+//                                Color(0xFFFF7B89),
+//                                buttonColor,
+//                                accentColor
+//                            )
+//                        ),
+//                        shape = CircleShape
+//                    )
+                    //                    ,
+//                    .shadow(8.dp,
+//                        CircleShape,
+//                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.real),
+                Icon(
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "App Logo",
                     modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                        .size(125.dp)
+                        .padding(0.dp),
+                    tint = Color(0xFFE4FFFC)
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // App name with more stylized text
             Text(
                 text = "RoomSync",
-                fontSize = 32.sp,
+                fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
-                fontFamily = karlaFont,
+                fontFamily = bungeeFont,
                 color = textColor,
                 style = TextStyle(
                     shadow = Shadow(
@@ -284,20 +284,20 @@ fun Login(
                         offset = Offset(0f, 0f),
                         blurRadius = 8f
                     )
-                )
+                ),
+                modifier = Modifier.offset(y = (-40).dp)
             )
 
-            // Subtitle with accent color and styling
-            Text(
-                text = "Faculty & Administration Login",
-                fontSize = 16.sp,
-                color = highlightColor,
-                fontFamily = karlaFont,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
+//             Subtitle with accent color and styling
+//            Text(
+//                text = "Faculty & Administration Login",
+//                fontSize = 18.sp,
+//                color = highlightColor,
+//                fontFamily = karlaFont,
+//                fontWeight = FontWeight.Medium,
+//                modifier = Modifier.padding(top = 4.dp)
+//                    .offset(y = (-20).dp)
+//            )
 
             // Login card with enhanced styling and shadow - updated with cardBackground
             Card(
@@ -314,6 +314,15 @@ fun Login(
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 6.dp
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFFF7B89).copy(alpha = 0.5f),
+                            accentColor.copy(alpha = 0.5f)
+                        )
+                    )
                 )
             ) {
                 Column(
@@ -336,7 +345,7 @@ fun Login(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Faculty Login",
+                            text = "Faculty / Admin Login",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = karlaFont,
@@ -374,7 +383,8 @@ fun Login(
                             Text(
                                 "Email / Username",
                                 fontFamily = karlaFont,
-                                fontSize = 14.sp
+                                fontSize = 15.sp,
+                                color = textColor.copy(alpha = 0.8f)
                             )
                         },
                         leadingIcon = {
@@ -425,7 +435,8 @@ fun Login(
                             Text(
                                 "Password",
                                 fontFamily = karlaFont,
-                                fontSize = 14.sp
+                                fontSize = 15.sp,
+                                color = textColor.copy(alpha = 0.8f)
                             )
                         },
                         leadingIcon = {
@@ -556,7 +567,7 @@ fun Login(
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
             // Student access card with enhanced design - updated with backgroundColor-based color
             Card(
@@ -575,45 +586,45 @@ fun Login(
                     width = 1.dp,
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            highlightColor.copy(alpha = 0.5f),
+                            Color(0xFFFF7B89).copy(alpha = 0.5f),
                             accentColor.copy(alpha = 0.2f)
                         )
                     )
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp)
+                    modifier = Modifier.padding(20.dp)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.offset(x = 50.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.school),
                             contentDescription = null,
                             tint = highlightColor,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(24.dp)
                         )
 
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Text(
-                            text = "Student Access",
-                            color = highlightColor,
-                            fontSize = 18.sp,
+                            text = "Student Portal",
+                            color = textColor,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = karlaFont
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Students can access the app directly without faculty credentials.",
-                        color = textColor,
-                        fontSize = 15.sp,
-                        lineHeight = 24.sp,
-                        fontFamily = karlaFont
-                    )
+//                    Text(
+//                        text = "Students can access the app directly without faculty credentials.",
+//                        color = textColor,
+//                        fontSize = 15.sp,
+//                        lineHeight = 24.sp,
+//                        fontFamily = karlaFont
+//                    )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -641,8 +652,9 @@ fun Login(
                             width = 1.dp,
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    highlightColor.copy(alpha = 0.7f),
-                                    accentColor.copy(alpha = 0.7f)
+//                                    accentColor.copy(alpha = 0.7f),
+//                                    highlightColor.copy(alpha = 0.7f),
+                                    accentColor, buttonColor
                                 )
                             )
                         )
@@ -655,7 +667,7 @@ fun Login(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Student Access",
+                            text = "Enter as Student",
                             fontFamily = karlaFont,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium
@@ -664,7 +676,7 @@ fun Login(
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
         }
     }
 }
