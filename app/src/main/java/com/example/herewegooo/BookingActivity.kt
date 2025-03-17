@@ -794,7 +794,7 @@ fun TimeSelectionRow(
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(4.dp),
+                    .padding(0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -893,7 +893,8 @@ fun TimeSelectionRow(
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = 8.dp),
+                                .padding(horizontal = 8.dp)
+                                .offset(x = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ){

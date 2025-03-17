@@ -22,8 +22,7 @@ fun AppNavigate(
     userViewModel: UserViewModel,
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
 ){
-    val easeIn = 1000
-    var loginReset = Int
+    val easeIn = 850
 
     NavHost(
         navController = navController,

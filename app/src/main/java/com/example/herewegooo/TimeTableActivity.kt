@@ -626,8 +626,6 @@ fun ClassesComponent(
             val startTimeFormat = classEvent.startTime.format(DateTimeFormatter.ofPattern("h:mm a"))
             val endTimeFormat = classEvent.endTime.format(DateTimeFormatter.ofPattern("h:mm a"))
 
-            val cardElevation = 4.dp
-
             Row(
                 modifier = Modifier
                     .padding(top = 10.dp)
@@ -650,12 +648,7 @@ fun ClassesComponent(
                         .offset(y = offsetY, x = 4.dp)
                         .height((durationHours * pixelsPerHour.value).dp - 2.dp)
                         .width(274.dp)
-                        .clip(RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = cornerSize, bottomEnd = cornerSize))
-                        .shadow(
-                            elevation = cardElevation,
-                            shape = RoundedCornerShape(cornerSize),
-                            spotColor = classEvent.color.copy(alpha = 0.5f)
-                        )
+                        .clip(RoundedCornerShape(topStart = 5.dp, topEnd = cornerSize, bottomStart = 5.dp, bottomEnd = cornerSize))
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
@@ -670,7 +663,7 @@ fun ClassesComponent(
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(12.dp)
+//                            .padding(12.dp)
                             .fillMaxWidth()
                     ) {
                         // Subject name
@@ -687,7 +680,8 @@ fun ClassesComponent(
                                     offset = Offset(1f, 1f),
                                     blurRadius = 2f
                                 )
-                            )
+                            ),
+                            modifier = Modifier.padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 0.dp)
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -695,8 +689,8 @@ fun ClassesComponent(
                         // Time information
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 0.dp)
-                                .offset(y = (-5).dp)
+                            modifier = Modifier.padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 2.dp)
+//                                .offset(y = (-5).dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.time), //Access Time
@@ -717,7 +711,7 @@ fun ClassesComponent(
                         // Room information
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 0.dp)
+                            modifier = Modifier.padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp)
 
                         ) {
                             Icon(
@@ -742,7 +736,7 @@ fun ClassesComponent(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 2.dp)
+                                    .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 1.dp)
                                     .zIndex(2f),
                                 contentAlignment = Alignment.CenterStart
                             ) {
@@ -832,23 +826,23 @@ suspend fun getTimetable(
         Color(0xFF6C56F9), // Purple
         Color(0xFF4CAF50), // Green
         Color(0xFF2196F3), // Blue
-        Color(0xFFFF9800), // Orange
-        Color(0xFFE91E63), // Pink
-        Color(0xFF009688), // Teal
-        Color(0xFF673AB7), // Deep Purple
-        Color(0xFF3F51B5), // Indigo
-        Color(0xFF795548), // Brown
-        Color(0xFF607D8B), // Blue Grey
-        Color(0xFFFF5722), // Deep Orange
-        Color(0xFF8BC34A), // Light Green
-        Color(0xFF00BCD4), // Cyan
-        Color(0xFFFFEB3B), // Yellow
-        Color(0xFF9C27B0), // Purple
-        Color(0xFF20B2AA), // Light Sea Green
-        Color(0xFF1E90FF), // Dodger Blue
-        Color(0xFFFF1493), // Deep Pink
-        Color(0xFF228B22), // Forest Green
-        Color(0xFFDC143C), // Crimson
+        Color(0xFFFF5722), // Bright Orange
+        Color(0xFFFF1493), // Hot Pink
+        Color(0xFF00E5FF), // Bright Cyan
+        Color(0xFF9C27B0), // Vibrant Purple
+        Color(0xFF536DFE), // Bright Indigo
+        Color(0xFFD84315), // Vivid Brown
+        Color(0xFF0288D1), // Bright Blue Grey
+        Color(0xFFFF6D00), // Vivid Deep Orange
+        Color(0xFF64DD17), // Bright Light Green
+        Color(0xFF00BFA5), // Vibrant Teal
+        Color(0xFFFFD600), // Bright Yellow
+        Color(0xFFAA00FF), // Electric Purple
+        Color(0xFF00E676), // Glowing Green
+        Color(0xFF00B0FF), // Brilliant Blue
+        Color(0xFFFF4081), // Vivid Pink
+        Color(0xFF76FF03), // Electric Green
+        Color(0xFFFF3D00), // Bright Red
     )
 
     val todayDateTime = LocalDateTime.now()

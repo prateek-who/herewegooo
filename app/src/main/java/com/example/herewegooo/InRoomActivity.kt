@@ -713,6 +713,7 @@ fun EventsComponent(
                 )
 
                 // Event card with enhanced styling and animations
+                val cornerSize = 16.dp
                 Box(
                     modifier = Modifier
                         .offset(y = offsetY, x = 4.dp)
@@ -720,10 +721,10 @@ fun EventsComponent(
                         .width(274.dp)
                         .clip(
                             RoundedCornerShape(
-                                topStart = 4.dp,
-                                topEnd = 12.dp,
-                                bottomStart = 4.dp,
-                                bottomEnd = 12.dp
+                                topStart = 5.dp,
+                                topEnd = cornerSize,
+                                bottomStart = 5.dp,
+                                bottomEnd = cornerSize
                             )
                         )
                         .shadow(
@@ -757,7 +758,7 @@ fun EventsComponent(
                         Text(
                             text = event.title,
                             color = Color.White,
-                            fontSize = 30.sp,
+                            fontSize = 25.sp,
                             fontFamily = karlaFont,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.25.sp,
@@ -775,18 +776,18 @@ fun EventsComponent(
                         // Time information with icon
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 2.dp)
+                            modifier = Modifier.padding(vertical = 0.dp)
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.time),
-                                contentDescription = "Hitman",
-                                modifier = Modifier.size(16.dp)
+                                contentDescription = "Time",
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "$startTimeFormat - $endTimeFormat",
                                 color = Color.White.copy(alpha = 0.9f),
-                                fontSize = 18.sp,
+                                fontSize = 16.sp,
                                 fontFamily = karlaFont,
                                 fontWeight = FontWeight.Medium
                             )
@@ -809,33 +810,9 @@ fun EventsComponent(
                                     color = Color.White.copy(alpha = 0.9f),
                                     fontSize = 16.sp,
                                     fontFamily = karlaFont,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
-                        }
-
-                        // If the event is long enough, we could add more details
-                        if (durationInMinutes >= 60) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(1.dp)
-                                    .background(Color.White.copy(alpha = 0.2f))
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // Optional description or additional details
-//                            event.description?.let { description ->
-//                                Text(
-//                                    text = description,
-//                                    color = Color.White.copy(alpha = 0.8f),
-//                                    fontSize = 12.sp,
-//                                    fontFamily = karlaFont,
-//                                    maxLines = 2,
-//                                    overflow = TextOverflow.Ellipsis
-//                                )
-//                            }
                         }
                     }
                 }
