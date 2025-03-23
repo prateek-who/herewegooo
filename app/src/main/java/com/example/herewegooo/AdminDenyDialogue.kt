@@ -64,10 +64,9 @@ import com.example.herewegooo.network.CourseTableQuery
 import com.example.herewegooo.network.DeletionId
 import com.example.herewegooo.network.IdColumnVerify
 import com.example.herewegooo.network.Request
+import com.example.herewegooo.network.adminComment
 import com.example.herewegooo.network.courseInsertion
-import com.example.herewegooo.network.finalEventConformation
 import com.example.herewegooo.network.finalEventPushDataClass
-import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.sendRequest
 import com.example.herewegooo.network.supabaseClient
 import io.github.jan.supabase.SupabaseClient
@@ -97,6 +96,8 @@ fun AdminDenyDialogue(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val client = supabaseClient()
+
+    var adminComment by remember { mutableStateOf("") }
 
     if (openDialog) {
         Dialog(
@@ -177,6 +178,34 @@ fun AdminDenyDialogue(
                         }
                     }
 
+                    OutlinedTextField(
+                        value = adminComment,
+                        onValueChange = {adminComment = it},
+                        label = {
+                            Text(
+                                text = "Enter reason for denying",
+                                fontFamily = karlaFont
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(10.dp),
+                        textStyle = TextStyle(
+                            fontFamily = karlaFont,
+                            fontSize = 18.sp,
+                            color = Color(0xFFFAFAFA)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            cursorColor = Color(0xFFFAFAFA),
+                            focusedBorderColor = Color(0xFFC43030),
+                            unfocusedBorderColor = Color(0xFF3C3C3E),
+                            focusedContainerColor = Color(0xFF28282C),
+                            unfocusedContainerColor = Color(0xFF28282C),
+                            unfocusedLabelColor = Color(0xFF8E8E93),
+                            focusedLabelColor = Color(0xFFABABAF)
+                        )
+                    )
+
                     // Buttons
                     Row(
                         modifier = Modifier
@@ -214,8 +243,10 @@ fun AdminDenyDialogue(
                                             toTime,
                                             facultyId,
                                             roomNumber.toInt(),
-                                            "who cares"
-                                        )
+                                            "who cares",
+                                            "denied"
+                                        ),
+                                        adminComment = adminComment(admin_comment = adminComment)
                                     )
                                     onShowSnackbar("Request Denied", SnackbarType.SUCCESS)
                                     onDismiss()
@@ -285,10 +316,11 @@ private fun formatDate(dateStr: String): String {
 
 suspend fun finalDenyConformation(
     client: SupabaseClient,
-    finalEventDeny: sendRequest
+    finalEventDeny: sendRequest,
+    adminComment: adminComment
 ){
     try {
-        val requestDeleteId = client.from("requests").select(columns = Columns.list("id")) {
+        val requestDenyStatusId = client.from("requests").select(columns = Columns.list("id")) {
             filter {
                 eq("class_date", finalEventDeny.classDate)
                 eq("start_time", finalEventDeny.startTime)
@@ -298,9 +330,15 @@ suspend fun finalDenyConformation(
             }
         }.decodeSingle<DeletionId>()
 
-        client.from("requests").delete{
+        println("I got the reason here: ${adminComment.admin_comment}")
+        client.from("requests").update(
+            {
+                set("status", "denied")
+                set("admin_comment", adminComment.admin_comment)
+            }
+        ){
             filter {
-                eq("id", requestDeleteId.id)
+                eq("id", requestDenyStatusId.id)
             }
         }
     }catch (e: Exception){

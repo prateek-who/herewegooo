@@ -111,16 +111,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.Event
+import com.example.herewegooo.network.GetFacultyName
 import com.example.herewegooo.network.RawEvent
 import com.example.herewegooo.network.ReceiveRequests
 import com.example.herewegooo.network.RequestWithFacultyName
-import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.supabaseClient
 import com.example.herewegooo.network.toEvent
 import com.example.herewegooo.ui.theme.HerewegoooTheme
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
@@ -162,8 +163,9 @@ fun AdminPanel(
         rotationAngle += 360f
 
         val currentTime = System.currentTimeMillis()
+        val manualRefresh = refreshCounter > 0
         // Only refresh if at least 30 seconds have passed since last refresh
-        if (currentTime - lastRefreshTime > 30000 || lastRefreshTime == 0L) {
+        if (manualRefresh || currentTime - lastRefreshTime > 30000 || lastRefreshTime == 0L) {
             isRefreshing = true
             try {
                 // Update lastRefreshTime
@@ -191,10 +193,8 @@ fun AdminPanel(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-//                                Color(0xFFD81F26),
-//                                Color(0xFFFF5757))
-                                Color(0xFFFFCC80),
-                                Color(0xFFFFE0B2), // Pale orange-cream
+                                Color(0xFF3F51B5),
+                                Color(0xFF5C6BC0)  // Slightly lighter blue
                             )
                         )
                     )
@@ -671,7 +671,7 @@ suspend fun getNames(
         filter {
             eq("user_id", facultyId)
         }
-    }.decodeSingle<getFacultyName>()
+    }.decodeSingle<GetFacultyName>()
 
     return name.username
 }
@@ -681,7 +681,12 @@ suspend fun getRequests(client: SupabaseClient): List<RequestWithFacultyName> {
     val timeRightNow = LocalTime.now()
     val dateRightNow = LocalDate.now()
 
-    val rawList = client.from("requests").select(columns = Columns.ALL).decodeList<ReceiveRequests>()
+    val rawList = client.from("requests").select(columns = Columns.list("id, class_date, start_time, end_time, faculty_id, classroom_id, request_created, reason, status")){
+        filter {
+            eq("status", "pending")
+        }
+        order("class_date", Order.ASCENDING)
+    }.decodeList<ReceiveRequests>()
 
     val futureRequests = rawList.filter { request ->
         val requestedDate = LocalDate.parse(request.class_date)

@@ -158,5 +158,17 @@ fun AppNavigate(
         ) {
             Timetable(userViewModel, onShowSnackbar)
         }
+
+        composable(
+            route = "requestHistory"
+        ) {
+            RequestHistory(userViewModel = userViewModel, onShowSnackbar = onShowSnackbar)
+        }
+
+        composable(
+            route = "swapHistory"
+        ) {
+            SwapHistory(userViewModel = userViewModel, modifier = Modifier, onShowSnackbar = onShowSnackbar)
+        }
     }
 }

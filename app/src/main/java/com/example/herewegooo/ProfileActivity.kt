@@ -81,8 +81,6 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
     // Red color for signout
     val signOutColor = Color(0xFFDB7676)
 
-    val classCount = 5
-
     val client = supabaseClient()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -91,12 +89,12 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
         // We call this shit here, DON'T CALL OUTSIDE, THAT CRASHES THE APP!!!
         val experience = experienceCalculator(user = userViewModel)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .verticalScroll(rememberScrollState())
-    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(rememberScrollState())
+        ) {
             // Top section with profile picture
             Box(
                 modifier = Modifier
@@ -308,7 +306,89 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
+
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clickable {
+                        navController.navigate("swapHistory")
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF1E1E26)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.swap),
+                        contentDescription = "Swap History",
+                        tint = textColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "Swap History",
+                        color = textColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = karlaFont
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Requests Actvivity from here
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clickable {
+                        navController.navigate("requestHistory")
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF1E1E26)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.request),
+                        contentDescription = "Request History",
+                        tint = textColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "Request History",
+                        color = textColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = karlaFont
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Cool Sign Out Button
             Card(
@@ -369,12 +449,10 @@ fun SelfProfile(navController: NavController, userViewModel: UserViewModel) {
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(40.dp))
         }
-    }
-    else {
-        Column (
+    } else {
+        Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -493,6 +571,11 @@ fun experienceCalculator(user: UserViewModel): Period {
 
 suspend fun signoutUser(client: SupabaseClient) {
     client.auth.signOut(SignOutScope.GLOBAL)
+}
+
+// Track requests from profile page
+suspend fun getRequestInfo(client: SupabaseClient){
+
 }
 
 // Example of what UserViewModel might look like

@@ -23,6 +23,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.sql.Date
 import java.time.LocalTime
+import kotlin.uuid.Uuid
 
 
 @Serializable
@@ -140,7 +141,8 @@ data class sendRequest(
     val endTime: LocalTime,
     val facultyId: String,
     val classroomId: Int,
-    val reason: String
+    val reason: String,
+    val status: String
 )
 
 data class finalEventConformation(
@@ -151,6 +153,11 @@ data class finalEventConformation(
     val classroom_id: Int,
     val faculty_id: String,
     val reason: String
+)
+
+@Serializable
+data class adminComment(
+    val admin_comment: String
 )
 
 @Serializable
@@ -197,7 +204,8 @@ data class Request(
 
     val faculty_id: String,
     val classroom_id: Int,
-    val reason: String
+    val reason: String,
+    val status: String
 )
 
 
@@ -217,7 +225,8 @@ data class ReceiveRequests(
     val faculty_id: String,
     val classroom_id: Int,
     val request_created: String,
-    val reason: String
+    val reason: String,
+    val status: String
 )
 
 data class RequestWithFacultyName(
@@ -226,7 +235,7 @@ data class RequestWithFacultyName(
 )
 
 @Serializable
-data class getFacultyName(
+data class GetFacultyName(
     val username: String
 )
 
@@ -251,12 +260,23 @@ fun RawEvent.toEvent(): Event = Event(
 )
 
 
-//data class Period(
-//    val startTime: LocalTime,
-//    val endTime: LocalTime,
-//    val title: String,
-//    val classroom_id: String,
-//)
+@Serializable
+data class FacultyRequestHistoryItem(
+    val class_date: String,
+
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val classroom_id: Int,
+    val request_created: String,
+    val reason: String,
+    val status: String, // pending, approved, denied
+    val admin_comment: String? = null
+)
+
 
 @Serializable
 data class RawTimeTable(
@@ -281,4 +301,65 @@ data class Period(
     val roomNumber: String,
     val color: Color,
     val status: String
+)
+
+
+// Swap class bullshit here
+@Serializable
+data class FacultyList(
+    val user_id: String,
+    val username: String
+)
+
+data class swapperList(
+    val from_id: String,
+    val to_id: String,
+    val class_date: String,
+    val start_time: LocalTime,
+    val end_time: LocalTime,
+    val classroom_id: Int,
+    val reason: String,
+    val status: String,
+)
+
+@Serializable
+data class SwapRequest(
+    val from_id: String,
+    val to_id: String,
+    val class_date: String,
+
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val classroom_id: Int,
+    val reason: String,
+    val status: String,
+)
+
+@Serializable
+data class SwapReceiveRequest(
+    val id: Int,
+    val from_id: String,
+    val to_id: String,
+    val class_date: String,
+
+    @Serializable(with = TimeSerializer::class)
+    val start_time: LocalTime,
+
+    @Serializable(with = TimeSerializer::class)
+    val end_time: LocalTime,
+
+    val classroom_id: Int,
+    val reason: String,
+    val status: String,
+    val created_at: String
+)
+
+
+@Serializable
+data class TestTime(
+    val id: Int
 )

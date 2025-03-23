@@ -145,13 +145,18 @@ fun Timetable(
     var selectedDate by remember { mutableStateOf(dateOptions.firstOrNull() ?: "Select Date") }
     var classes by remember { mutableStateOf<List<Period>>(emptyList()) }
 
+    var toSendDate = ""
+
     // Load classes when date changes
     LaunchedEffect(selectedDate) {
         val localDate = LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
         val newFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val formattedDate = localDate.format(newFormatter)
-        // Replace this with your actual data fetching logic
+
+
         val sqlDate = Date.valueOf(formattedDate)
+
+        toSendDate = sqlDate.toString()
 
         withContext(Dispatchers.IO) {
             classes = getTimetable(client = client, selectedDate = sqlDate, user = userViewModel)
@@ -365,8 +370,11 @@ fun Timetable(
                         .fillMaxHeight()
                         .offset(x = (-5).dp),
                     classes = classes,
+                    date = toSendDate.toString(),
                     startHour = startHour,
-                    pixelsPerHour = pixelsPerHour
+                    pixelsPerHour = pixelsPerHour,
+                    userViewModel = userViewModel,
+                    onShowSnackbar = onShowSnackbar
                 )
             }
         }
@@ -406,27 +414,6 @@ fun Timetable(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun QuickDateButton(
-    text: String,
-    color: Color,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.height(36.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 
@@ -595,9 +582,19 @@ fun TimelineComponent(
 fun ClassesComponent(
     modifier: Modifier = Modifier,
     classes: List<Period>,
+    date: String,
     startHour: Int,
-    pixelsPerHour: Dp
+    pixelsPerHour: Dp,
+    userViewModel: UserViewModel,
+    onShowSnackbar: (message: String, type: SnackbarType) -> Unit
 ) {
+    val backgroundColor = Color(0xFF1E1E2E)
+    val headerColor = Color(0xFF2A2A3C)
+    val accentColor = Color(0xFF9676DB)
+    val dropDownListColor = Color(0xFF3A3658)
+    val buttonColor = Color(0xFF4A3ABA)
+    val textColor = Color.White
+
     Box(modifier = modifier) {
         // Timeline indicator
         Box(
@@ -625,6 +622,8 @@ fun ClassesComponent(
 
             val startTimeFormat = classEvent.startTime.format(DateTimeFormatter.ofPattern("h:mm a"))
             val endTimeFormat = classEvent.endTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+
+            var showDialog by remember { mutableStateOf(false) }
 
             Row(
                 modifier = Modifier
@@ -730,18 +729,81 @@ fun ClassesComponent(
                             )
                         }
 
-                        // If the class is long enough, we add more details
-                        if (durationInMinutes >= 45) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 1.dp)
-                                    .zIndex(2f),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                StatusChip(text = classEvent.status)
+                        Row (
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(
+                                start = 7.dp,
+                                top = 8.dp,
+                                end = 0.dp,
+                                bottom = 5.dp
+                            )
+                        ) {
+                            // If the class is long enough, we add more details
+                            if (durationInMinutes >= 45) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .width(100.dp)
+//                                        .background(Color.Black)
+                                        .padding(start = 5.dp)
+                                        .zIndex(2f),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    StatusChip(text = classEvent.status)
+                                }
                             }
+
+                            Spacer(modifier = Modifier.width(40.dp))
+
+                            if (classEvent.status == "Upcoming") {
+                                Box(
+                                    contentAlignment = Alignment.CenterEnd,
+                                    modifier = Modifier.fillMaxWidth()
+                                        .padding(end = 8.dp)
+                                ) {
+                                    Button(
+                                        onClick = { showDialog = true },
+                                        shape = RoundedCornerShape(topStart = 5.dp, topEnd = 10.dp, bottomStart = 5.dp, bottomEnd = 20.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = classEvent.color.copy(alpha = 0.65f),
+                                            contentColor = textColor
+                                        ),
+                                        modifier = Modifier
+                                            .height(36.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.swap), // Add this icon resource
+                                            contentDescription = "Swap",
+                                            tint = textColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Swap Class",
+                                            fontFamily = funnelFont,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (showDialog){
+                            SwapClassDialog(
+                                openDialog = true,
+                                onDismiss = {
+                                    showDialog = false
+                                },
+                                user = userViewModel,
+                                onShowSnackbar = onShowSnackbar,
+                                class_date = date,  //LocalDate.parse(date.toString()).toString()
+                                start_time = classEvent.startTime,
+                                end_time = classEvent.endTime,
+                                classroom_id = classEvent.roomNumber,
+                            )
                         }
                     }
                 }

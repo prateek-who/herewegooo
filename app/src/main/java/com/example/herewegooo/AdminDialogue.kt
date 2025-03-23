@@ -20,10 +20,13 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -68,6 +71,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -79,6 +83,7 @@ import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.zIndex
 import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.CourseTableQuery
 import com.example.herewegooo.network.DeletionId
@@ -88,7 +93,6 @@ import com.example.herewegooo.network.SubjectList
 import com.example.herewegooo.network.courseInsertion
 import com.example.herewegooo.network.finalEventConformation
 import com.example.herewegooo.network.finalEventPushDataClass
-import com.example.herewegooo.network.getFacultyName
 import com.example.herewegooo.network.sendRequest
 import com.example.herewegooo.network.supabaseClient
 import io.github.jan.supabase.SupabaseClient
@@ -334,56 +338,83 @@ fun AdminDialogue(
                                 }
                             )
 
+                            val isKeyboardVisible =
+                                WindowInsets.ime.getBottom(LocalDensity.current) > 0
+                            val displayedSubjects = if (isKeyboardVisible) {
+                                filteredSubjects.take(3)
+                            } else {
+                                filteredSubjects
+                            }
+                            val scrollState = rememberScrollState()
+
                             DropdownMenu(
-                                expanded = expanded && filteredSubjects.isNotEmpty(),
+                                expanded = expanded && filteredSubjects.isNotEmpty() && (!isKeyboardVisible || filteredSubjects.size <= 2),
                                 onDismissRequest = { expanded = false },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 250.dp)
-                                    .background(Color(0xFF28282C)),
-                                properties = PopupProperties(focusable = false)
+                                    .width(290.dp)
+                                    .heightIn(max = 139.dp)
+                                    .background(Color(0xFF28282C))
+                                    .imePadding(),
+                                properties = PopupProperties(
+                                    focusable = false,
+                                    excludeFromSystemGesture = true
+                                )
                             ) {
-                                filteredSubjects.forEach { entry ->
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                subject = entry.value
-                                                expanded = false
-                                                val key = entry.key
-                                                if (key == null) {
-                                                    isCustomSelected = true
-                                                } else {
-                                                    isCustomSelected = false
-                                                    selectedSubjectCode = key
-                                                }
-                                            },
-                                            text = {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.SpaceBetween
-                                                ) {
-                                                    Text(
-                                                        text = entry.value,
-                                                        color = Color.White,
-                                                        fontFamily = karlaFont,
-                                                        fontSize = 16.sp,
-                                                    )
-
-                                                    if (entry.key != null) {
-                                                        Text(
-                                                            text = entry.key.toString(),
-                                                            color = Color(0xFF8E8E93),
-                                                            fontFamily = karlaFont,
-                                                            fontSize = 14.sp,
-                                                        )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 140.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .verticalScroll(scrollState)
+                                    ) {
+                                        displayedSubjects.forEach { entry ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    subject = entry.value
+                                                    expanded = false
+                                                    val key = entry.key
+                                                    if (key == null) {
+                                                        isCustomSelected = true
+                                                    } else {
+                                                        isCustomSelected = false
+                                                        selectedSubjectCode = key
                                                     }
-                                                }
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
+                                                },
+                                                text = {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                    ) {
+                                                        Text(
+                                                            text = entry.value,
+                                                            color = Color.White,
+                                                            fontFamily = karlaFont,
+                                                            fontSize = 16.sp,
+                                                            modifier = Modifier.width(200.dp)
+                                                        )
+
+                                                        if (entry.key != null) {
+                                                            Text(
+                                                                text = entry.key.toString(),
+                                                                color = Color(0xFF8E8E93),
+                                                                fontFamily = karlaFont,
+                                                                fontSize = 14.sp,
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                            )
+                                        }
                                     }
                                 }
                             }
+                        }
 
                         // Custom subject fields
                         AnimatedVisibility(
@@ -603,7 +634,7 @@ suspend fun finalEventPush(
     customSubjectId: String
 ){
     try{
-        val requestDeleteId = client.from("requests").select(columns = Columns.list("id")) {
+        val requestApprovalStatusId = client.from("requests").select(columns = Columns.list("id")) {
             filter {
                 eq("class_date", finalEventList.classDate)
                 eq("start_time", finalEventList.start_time)
@@ -638,9 +669,14 @@ suspend fun finalEventPush(
             client.from("timetable").insert(insertInTimeTable)
         }
 
-        client.from("requests").delete{
+        client.from("requests").update(
+            {
+                set("status", "approved")
+                set("admin_comment", "Request Approved!")
+            }
+        ){
             filter {
-                eq("id", requestDeleteId.id)
+                eq("id", requestApprovalStatusId.id)
             }
         }
 

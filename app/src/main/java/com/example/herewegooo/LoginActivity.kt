@@ -239,75 +239,53 @@ fun Login(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Box(
                 modifier = Modifier
-                    .size(200.dp)
-                    .offset(y = (-10).dp),
-//                    .border(
-//                        width = 4.dp,
-//                        brush = Brush.sweepGradient(
-//                            listOf(
-//                                accentColor,
-//                                Color(0xFFFF7B89),
-//                                buttonColor,
-//                                accentColor
-//                            )
-//                        ),
-//                        shape = CircleShape
-//                    )
-                    //                    ,
-//                    .shadow(8.dp,
-//                        CircleShape,
-//                    ),
+//                    .size(200.dp)
+                    .height(150.dp)
+                    .width(400.dp)
+                    .offset(y = (-40).dp)
+                    .background(Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.logo),
+//                    contentDescription = "App Logo",
+//                    modifier = Modifier
+//                        .size(350.dp)
+//                        .padding(0.dp),
+//                    tint = Color(0xFFE4FFFC)
+//                )
+//
+//                // App name with more stylized text
+//            Text(
+//                text = "RoomSync",
+//                fontSize = 40.sp,
+//                fontWeight = FontWeight.ExtraBold,
+//                fontFamily = bungeeFont,
+//                color = textColor,
+//                style = TextStyle(
+//                    shadow = Shadow(
+//                        color = accentColor.copy(alpha = 0.5f),
+//                        offset = Offset(0f, 0f),
+//                        blurRadius = 8f
+//                    )
+//                ),
+//                modifier = Modifier.offset(y = (-40).dp)
+//            )
                 Icon(
-                    painter = painterResource(id = R.drawable.logo),
+                    painter = painterResource(id = R.drawable.jainlogo),
                     contentDescription = "App Logo",
                     modifier = Modifier
-                        .size(125.dp)
+                        .size(320.dp)
                         .padding(0.dp),
                     tint = Color(0xFFE4FFFC)
                 )
             }
 
-            // App name with more stylized text
-            Text(
-                text = "RoomSync",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = bungeeFont,
-                color = textColor,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = accentColor.copy(alpha = 0.5f),
-                        offset = Offset(0f, 0f),
-                        blurRadius = 8f
-                    )
-                ),
-                modifier = Modifier.offset(y = (-40).dp)
-            )
-
-//             Subtitle with accent color and styling
-//            Text(
-//                text = "Faculty & Administration Login",
-//                fontSize = 18.sp,
-//                color = highlightColor,
-//                fontFamily = karlaFont,
-//                fontWeight = FontWeight.Medium,
-//                modifier = Modifier.padding(top = 4.dp)
-//                    .offset(y = (-20).dp)
-//            )
-
             // Login card with enhanced styling and shadow - updated with cardBackground
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 10.dp,
-                        spotColor = accentColor.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = cardBackground  // Using updated cardBackground
@@ -323,7 +301,14 @@ fun Login(
                             accentColor.copy(alpha = 0.5f)
                         )
                     )
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 10.dp,
+                        spotColor = accentColor.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
             ) {
                 Column(
                     modifier = Modifier
@@ -705,16 +690,12 @@ private fun handleLogin(
                         return@launch
                     }
 
-                    Log.d("LoginDebug", "WE IN!!")
-
                     val user = client.from("users")
                         .select(Columns.list("user_id, role, username", "profile_pic", "join_date", "favourite_quote")) {
                             filter {
                                 eq("user_id", userId)
                             }
                         }.decodeSingle<LoginDataOne>()
-
-                    Log.d("LoginDebug", "We made the supabase client")
 
                     val userSubs = client.from("courses")
                         .select(Columns.list("course_name")) {
@@ -734,11 +715,9 @@ private fun handleLogin(
                         userViewModel.favouriteQuote = user.favourite_quote
                         userViewModel.course_names = courseNamesList
 
-                        Log.d("LoginDebug", "Everything assigned, we should be going in now")
 
                         val destination = if (user.role == "admin") "adminPanel" else "home"
                         navController.navigate(route = destination) {
-                            Log.d("LoginDebug", "We should be in now")
                             popUpTo(route = "starthere") {
                                 inclusive = true
                             }

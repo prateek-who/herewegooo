@@ -194,7 +194,7 @@ fun BookingDialog(
                                 painter = painterResource(id = R.drawable.schedule),
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
-                                tint = accentColor  // Use accent color instead of white
+                                tint = accentColor
                             )
                             Text(
                                 text = "Book Your Slot",
@@ -663,7 +663,8 @@ fun BookingDialog(
                                                         endTime,
                                                         user.userId,
                                                         roomNumber.toInt(),
-                                                        reason
+                                                        reason = reason,
+                                                        status = "pending",
                                                     )
                                                 )
                                                 onDismiss()
@@ -1019,7 +1020,8 @@ suspend fun slotBookingRequest(
         end_time = requestList.endTime,
         faculty_id = requestList.facultyId,
         classroom_id = requestList.classroomId,
-        reason = requestList.reason
+        reason = requestList.reason,
+        status = requestList.status
     )
 
     return try {
