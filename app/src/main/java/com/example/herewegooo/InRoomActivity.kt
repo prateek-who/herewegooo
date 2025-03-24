@@ -709,7 +709,6 @@ fun EventsComponent(
                         .width(3.dp)
                         .clip(RoundedCornerShape(1.5.dp))
                         .background(event.color)
-//                        .shadow(1.dp, RoundedCornerShape(1.5.dp))
                 )
 
                 // Event card with enhanced styling and animations
@@ -758,9 +757,9 @@ fun EventsComponent(
                         Text(
                             text = event.title,
                             color = Color.White,
-                            fontSize = 25.sp,
+                            fontSize = 22.sp,
                             fontFamily = karlaFont,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 0.25.sp,
                             style = TextStyle(
                                 shadow = Shadow(
@@ -781,13 +780,13 @@ fun EventsComponent(
                             Image(
                                 painter = painterResource(id = R.drawable.time),
                                 contentDescription = "Time",
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "$startTimeFormat - $endTimeFormat",
                                 color = Color.White.copy(alpha = 0.9f),
-                                fontSize = 16.sp,
+                                fontSize = 14.sp,
                                 fontFamily = karlaFont,
                                 fontWeight = FontWeight.Medium
                             )
@@ -802,13 +801,13 @@ fun EventsComponent(
                                 Image(
                                     painter = painterResource(id = R.drawable.whitehitman),
                                     contentDescription = "Hitman",
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = facultyName,
                                     color = Color.White.copy(alpha = 0.9f),
-                                    fontSize = 16.sp,
+                                    fontSize = 14.sp,
                                     fontFamily = karlaFont,
                                     fontWeight = FontWeight.Medium
                                 )

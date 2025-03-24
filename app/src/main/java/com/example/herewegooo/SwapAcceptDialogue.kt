@@ -393,7 +393,7 @@ fun SwapAcceptDialogue(
                                     onDismissRequest = { courseExpanded = false },
                                     modifier = Modifier
                                         .heightIn(max = 260.dp)
-                                        .fillMaxWidth(0.9f)
+                                        .fillMaxWidth(0.8f)
                                         .background(cardBackground),
                                     properties = PopupProperties(focusable = false)
                                 ) {
