@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <color name="splash_background">#1E1E2E</color>
 
     <style name="Theme.Herewegooo" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Herewegooo.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.Herewegooo</item>
+    </style>
 </resources>
