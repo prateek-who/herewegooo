@@ -709,7 +709,7 @@ fun EventsComponent(
                         .width(3.dp)
                         .clip(RoundedCornerShape(1.5.dp))
                         .background(event.color)
-                        .shadow(1.dp, RoundedCornerShape(1.5.dp))
+//                        .shadow(1.dp, RoundedCornerShape(1.5.dp))
                 )
 
                 // Event card with enhanced styling and animations
@@ -718,7 +718,7 @@ fun EventsComponent(
                     modifier = Modifier
                         .offset(y = offsetY, x = 4.dp)
                         .height((durationHours * pixelsPerHour.value).dp - 2.dp)
-                        .width(274.dp)
+                        .width(264.dp)
                         .clip(
                             RoundedCornerShape(
                                 topStart = 5.dp,
@@ -738,13 +738,13 @@ fun EventsComponent(
                             spotColor = event.color.copy(alpha = 0.5f)
                         )
                         .background(
-                            brush = Brush.horizontalGradient(
+                            brush = Brush.linearGradient(
                                 colors = listOf(
                                     event.color.copy(alpha = 0.95f),
-                                    event.color.copy(alpha = 0.85f)
+                                    event.color.darker(0.1f).copy(alpha = 0.85f)
                                 ),
-                                startX = 0f,
-                                endX = 295f
+                                start = Offset(0f, 0f),
+                                end = Offset(300f, 300f)
                             )
                         ),
                     contentAlignment = Alignment.TopStart,

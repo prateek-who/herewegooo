@@ -407,8 +407,7 @@ fun AdminDialogue(
                                                         }
                                                     }
                                                 },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
+                                                modifier = Modifier.fillMaxWidth()
                                             )
                                         }
                                     }

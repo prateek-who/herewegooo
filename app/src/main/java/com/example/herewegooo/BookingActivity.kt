@@ -185,7 +185,7 @@ fun BookingDialog(
                                 shape = RectangleShape
                             ),
                         contentAlignment = Alignment.Center
-                    ){
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -331,37 +331,51 @@ fun BookingDialog(
                                         .clickable { expanded = true }
                                 )
 
+                                val scrollState = rememberScrollState()
+
                                 DropdownMenu(
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false },
                                     modifier = Modifier
-                                        .fillMaxWidth(0.9f)
+                                        .fillMaxWidth(0.7f)
                                         .background(cardBackground),
                                     properties = PopupProperties(focusable = false)
                                 ) {
-                                    dateOptions.forEach { date ->
-                                        val formattedOptionDate = try {
-                                            val parsed = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                                            parsed.format(displayDateFormatter)
-                                        } catch (e: Exception) {
-                                            date
-                                        }
-
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                selectedDate = date
-                                                expanded = false
-                                            },
-                                            text = {
-                                                Text(
-                                                    text = formattedOptionDate,
-                                                    color = textColor,
-                                                    fontFamily = karlaFont,
-                                                    fontSize = 16.sp
+                                    Box(
+                                        modifier = Modifier.heightIn(max = 215.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .verticalScroll(scrollState)
+                                        ) {
+                                            dateOptions.forEach { date ->
+                                                val formattedOptionDate = try {
+                                                    val parsed = LocalDate.parse(
+                                                        date,
+                                                        DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                                    )
+                                                    parsed.format(displayDateFormatter)
+                                                } catch (e: Exception) {
+                                                    date
+                                                }
+                                                DropdownMenuItem(
+                                                    onClick = {
+                                                        selectedDate = date
+                                                        expanded = false
+                                                    },
+                                                    text = {
+                                                        Text(
+                                                            text = formattedOptionDate,
+                                                            color = textColor,
+                                                            fontFamily = karlaFont,
+                                                            fontSize = 16.sp,
+                                                        )
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth()
                                                 )
-                                            },
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -373,7 +387,7 @@ fun BookingDialog(
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp, vertical = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ){
+                        ) {
                             Text(
                                 text = "SELECT TIME",
                                 color = textColor.copy(alpha = 0.7f),
@@ -546,7 +560,7 @@ fun BookingDialog(
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp, vertical = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ){
+                    ) {
                         Button(
                             onClick = onDismiss,
                             modifier = Modifier
@@ -708,7 +722,7 @@ fun BookingDialog(
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
-                                ){
+                                ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.schedule),
                                         contentDescription = null,
@@ -898,7 +912,7 @@ fun TimeSelectionRow(
                                 .offset(x = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
-                        ){
+                        ) {
                             // AM/PM text
                             Text(
                                 text = meridianValue,

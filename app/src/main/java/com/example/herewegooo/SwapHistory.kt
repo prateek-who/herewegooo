@@ -507,7 +507,7 @@ fun SwapHistoryItem(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = if (isIncoming) Icons.Rounded.KeyboardArrowDown else Icons.Rounded.KeyboardArrowDown, // call received and call made respc
+                            painter = if (isIncoming) painterResource(id = R.drawable.incoming) else painterResource(id = R.drawable.outgoing),
                             contentDescription = null,
                             tint = if (isIncoming) accentColor else highlightColor,
                             modifier = Modifier.size(16.dp)
@@ -572,12 +572,12 @@ fun SwapHistoryItem(
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        if (isToday) Color(0xFFFF0A0A)
-                                        else if (isTomorrow) Color(0xFFFF9800)
+                                        if (isToday && request.status == "pending") Color(0xFFFF0A0A)
+                                        else if (isTomorrow && request.status == "pending") Color(0xFFFF9800)
                                         else accentColor,
-                                        if (isToday) Color(0xFFFF453A).copy(alpha = 0.8f)
-                                        else if (isTomorrow) Color(0xFFFF9800).copy(alpha = 0.8f)
-                                        else accentColor.copy(alpha = 0.7f)
+                                        if (isToday && request.status == "pending") Color(0xFFFF453A).copy(alpha = 0.5f)
+                                        else if (isTomorrow && request.status == "pending") Color(0xFFFF9800).copy(alpha = 0.5f)
+                                        else accentColor.copy(alpha = 0.5f)
                                     )
                                 ),
                                 shape = RoundedCornerShape(12.dp)
@@ -588,12 +588,12 @@ fun SwapHistoryItem(
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        if (isToday) Color(0xFFFF0A0A)
-                                        else if (isTomorrow) Color(0xFFFF9800)
+                                        if (isToday && request.status == "pending") Color(0xFFFF0A0A)
+                                        else if (isTomorrow && request.status == "pending") Color(0xFFFF9800)
                                         else accentColor,
-                                        if (isToday) Color(0xFFFF453A).copy(alpha = 0.8f)
-                                        else if (isTomorrow) Color(0xFFFF9800).copy(alpha = 0.8f)
-                                        else accentColor.copy(alpha = 0.7f)
+                                        if (isToday && request.status == "pending") Color(0xFFFF453A).copy(alpha = 0.5f)
+                                        else if (isTomorrow && request.status == "pending") Color(0xFFFF9800).copy(alpha = 0.5f)
+                                        else accentColor.copy(alpha = 0.5f)
                                     )
                                 ),
                                 shape = RoundedCornerShape(12.dp)
@@ -930,16 +930,3 @@ suspend fun denySwapRequestStatus(
 enum class SwapViewType {
     ALL, INCOMING, OUTGOING
 }
-
-data class SwapRequestItem(
-    val id: String,
-    val from_id: String,
-    val to_id: String,
-    val class_date: String,
-    val start_time: LocalTime,
-    val end_time: LocalTime,
-    val classroom_id: String,
-    val reason: String,
-    val status: String,
-    val created_at: String
-)
