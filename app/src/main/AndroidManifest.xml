@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -19,7 +20,6 @@
             android:label="RoomSync"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Herewegooo.Starting">
-        <!--            android:theme="@style/Theme.Herewegooo">-->
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

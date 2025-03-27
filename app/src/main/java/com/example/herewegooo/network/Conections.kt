@@ -32,7 +32,7 @@ data class LoginDataOne(
     val role: String,
     val username: String,
     val profile_pic: String,
-    val join_date: String,
+    val join_date: String? = null,
     val favourite_quote: String
 )
 

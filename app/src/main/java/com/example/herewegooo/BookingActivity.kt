@@ -76,6 +76,7 @@ import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.herewegooo.data.model.UserViewModel
 import com.example.herewegooo.network.IdColumnVerify
 import com.example.herewegooo.network.Request
@@ -142,6 +143,7 @@ fun BookingDialog(
     val focusedFieldColor = Color(0xFF222845)   // Slightly lighter field background
 
     val client = supabaseClient()
+    var isLoading by remember { mutableStateOf(false) }
 
     if (openDialog) {
         Dialog(
@@ -580,7 +582,7 @@ fun BookingDialog(
                                         buttonColor.copy(alpha = 0.3f)
                                     )
                                 )
-                            )
+                            ),
                         ) {
                             Text(
                                 text = "Cancel",
@@ -592,110 +594,138 @@ fun BookingDialog(
 
                         Button(
                             onClick = {
-                                val fromHour = fromHourEntry.toIntOrNull()
-                                val fromMinute = fromMinuteEntry.toIntOrNull()
-                                val toHour = toHourEntry.toIntOrNull()
-                                val toMinute = toMinuteEntry.toIntOrNull()
+                                isLoading = true
+                                try {
+                                    val fromHour = fromHourEntry.toIntOrNull()
+                                    val fromMinute = fromMinuteEntry.toIntOrNull()
+                                    val toHour = toHourEntry.toIntOrNull()
+                                    val toMinute = toMinuteEntry.toIntOrNull()
 
-                                if (fromHour == null || fromMinute == null || toHour == null || toMinute == null) {
-                                    onShowSnackbar("Please enter valid times", SnackbarType.ERROR)
-                                } else {
-                                    fun convertToMinutes(
-                                        hour: Int,
-                                        minute: Int,
-                                        meridian: String
-                                    ): Int {
-                                        var h = hour
-                                        // Convert the hour to 24-hour format.
-                                        if (meridian.uppercase() == "AM") {
-                                            if (h == 12) h = 0
-                                        } else if (meridian.uppercase() == "PM") {
-                                            if (h != 12) h += 12
+                                    if (fromHour == null || fromMinute == null || toHour == null || toMinute == null) {
+                                        onShowSnackbar(
+                                            "Please enter valid times",
+                                            SnackbarType.ERROR
+                                        )
+                                    } else {
+                                        fun convertToMinutes(
+                                            hour: Int,
+                                            minute: Int,
+                                            meridian: String
+                                        ): Int {
+                                            var h = hour
+                                            // Convert the hour to 24-hour format.
+                                            if (meridian.uppercase() == "AM") {
+                                                if (h == 12) h = 0
+                                            } else if (meridian.uppercase() == "PM") {
+                                                if (h != 12) h += 12
+                                            }
+                                            return h * 60 + minute
                                         }
-                                        return h * 60 + minute
-                                    }
 
-                                    val fromTotal =
-                                        convertToMinutes(fromHour, fromMinute, fromMeridianEntry)
-                                    val toTotal =
-                                        convertToMinutes(toHour, toMinute, toMeridianEntry)
-
-                                    val now = LocalTime.now()
-                                    val currentTotal = now.hour * 60 + now.minute
-
-                                    val inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                                    val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                                    val classDate = selectedDate
-                                    val bookingDate = LocalDate.parse(classDate, inputFormatter)
-                                    val finalDate =
-                                        bookingDate.format(outputFormatter) // yyyy-MM-dd format
-
-                                    val today = LocalDate.now()
-
-                                    val startTime =
-                                        getLocalTime(fromHour, fromMinute, fromMeridianEntry)
-                                    val endTime = getLocalTime(toHour, toMinute, toMeridianEntry)
-
-                                    // Validate booking time
-                                    when {
-                                        bookingDate.isBefore(today) -> {
-                                            onShowSnackbar(
-                                                "Cannot book for past dates",
-                                                SnackbarType.ERROR
+                                        val fromTotal =
+                                            convertToMinutes(
+                                                fromHour,
+                                                fromMinute,
+                                                fromMeridianEntry
                                             )
-                                        }
+                                        val toTotal =
+                                            convertToMinutes(toHour, toMinute, toMeridianEntry)
 
-                                        bookingDate.isEqual(today) && fromTotal < currentTotal -> {
-                                            onShowSnackbar(
-                                                "Start time must be in the future",
-                                                SnackbarType.ERROR
-                                            )
-                                        }
+                                        val now = LocalTime.now()
+                                        val currentTotal = now.hour * 60 + now.minute
 
-                                        toTotal <= fromTotal -> {
-                                            onShowSnackbar(
-                                                "End time must be after start time",
-                                                SnackbarType.ERROR
-                                            )
-                                        }
+                                        val inputFormatter =
+                                            DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                        val outputFormatter =
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        val classDate = selectedDate
+                                        val bookingDate = LocalDate.parse(classDate, inputFormatter)
+                                        val finalDate =
+                                            bookingDate.format(outputFormatter) // yyyy-MM-dd format
 
-                                        reason.isBlank() -> {
-                                            onShowSnackbar(
-                                                "Please enter a reason for booking",
-                                                SnackbarType.ERROR
-                                            )
-                                        }
+                                        val today = LocalDate.now()
 
-                                        else -> {
-                                            // Proceed with booking
-                                            coroutineScope.launch {
-                                                val success = slotBookingRequest(
-                                                    client,
-                                                    sendRequest(
-                                                        finalDate.toString(),
-                                                        startTime,
-                                                        endTime,
-                                                        user.userId,
-                                                        roomNumber.toInt(),
-                                                        reason = reason,
-                                                        status = "pending",
-                                                    )
+                                        val startTime =
+                                            getLocalTime(fromHour, fromMinute, fromMeridianEntry)
+                                        val endTime =
+                                            getLocalTime(toHour, toMinute, toMeridianEntry)
+
+                                        // Validate booking time
+                                        when {
+                                            bookingDate.isBefore(today) -> {
+                                                onShowSnackbar(
+                                                    "Cannot book for past dates",
+                                                    SnackbarType.ERROR
                                                 )
-                                                onDismiss()
-                                                if (success != null) {
-                                                    onShowSnackbar(
-                                                        "Slot requested successfully!",
-                                                        SnackbarType.SUCCESS
-                                                    )
-                                                } else {
-                                                    onShowSnackbar(
-                                                        "Failed to book slot",
-                                                        SnackbarType.ERROR
-                                                    )
+                                            }
+
+                                            bookingDate.isEqual(today) && fromTotal < currentTotal -> {
+                                                onShowSnackbar(
+                                                    "Start time must be in the future",
+                                                    SnackbarType.ERROR
+                                                )
+                                            }
+
+                                            toTotal <= fromTotal -> {
+                                                onShowSnackbar(
+                                                    "End time must be after start time",
+                                                    SnackbarType.ERROR
+                                                )
+                                            }
+
+                                            reason.isBlank() -> {
+                                                onShowSnackbar(
+                                                    "Please enter a reason for booking",
+                                                    SnackbarType.ERROR
+                                                )
+                                            }
+
+                                            else -> {
+                                                // Proceed with booking
+                                                coroutineScope.launch {
+                                                    try {
+                                                        val success = slotBookingRequest(
+                                                            client,
+                                                            sendRequest(
+                                                                finalDate.toString(),
+                                                                startTime,
+                                                                endTime,
+                                                                user.userId,
+                                                                roomNumber.toInt(),
+                                                                reason = reason,
+                                                                status = "pending",
+                                                            )
+                                                        )
+                                                        onDismiss()
+                                                        if (success != null) {
+                                                            onShowSnackbar(
+                                                                "Slot requested successfully!",
+                                                                SnackbarType.SUCCESS
+                                                            )
+                                                        } else {
+                                                            onShowSnackbar(
+                                                                "Failed to book slot",
+                                                                SnackbarType.ERROR
+                                                            )
+                                                        }
+                                                    } catch (e: Exception) {
+                                                        onShowSnackbar(
+                                                            "Failed to book slot",
+                                                            SnackbarType.ERROR
+                                                        )
+                                                    } finally {
+                                                        isLoading = false
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                }catch (e: Exception){
+                                    isLoading = false
+                                    onShowSnackbar(
+                                        "An error occurred",
+                                        SnackbarType.ERROR
+                                    )
                                 }
                             },
                             modifier = Modifier
@@ -707,7 +737,8 @@ fun BookingDialog(
                                 containerColor = Color.Transparent,
                                 contentColor = textColor
                             ),
-                            contentPadding = PaddingValues(0.dp)
+                            contentPadding = PaddingValues(0.dp),
+                            enabled = !isLoading
                         ) {
                             Box(
                                 modifier = Modifier

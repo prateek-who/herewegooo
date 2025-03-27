@@ -109,6 +109,7 @@ fun SwapAcceptDialogue(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val client = supabaseClient()
+    var isLoading by remember { mutableStateOf(false) }
 
     // Course selection state
     var courseSearchText by remember { mutableStateOf("") }
@@ -362,16 +363,6 @@ fun SwapAcceptDialogue(
                                             modifier = Modifier.size(20.dp)
                                         )
                                     },
-//                                    trailingIcon = {
-//                                        IconButton(onClick = { courseExpanded = !courseExpanded }) {
-//                                            Icon(
-//                                                imageVector = if (courseExpanded) Icons.Rounded.KeyboardArrowUp
-//                                                else Icons.Rounded.KeyboardArrowDown,
-//                                                contentDescription = if (courseExpanded) "Collapse" else "Expand",
-//                                                tint = accentColor
-//                                            )
-//                                        }
-//                                    }
                                 )
                                 if (selectedCourseId.isNotEmpty()) {
                                     Text(
@@ -449,6 +440,7 @@ fun SwapAcceptDialogue(
                     }
 
                     // Action buttons
+                    // Cancel button
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -456,7 +448,16 @@ fun SwapAcceptDialogue(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = onDismiss,
+                            onClick = {
+                                if(!isLoading){
+                                    isLoading = true
+                                    try{
+                                        onDismiss
+                                    }finally {
+                                        isLoading = false
+                                    }
+                                }
+                                      },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
@@ -474,16 +475,27 @@ fun SwapAcceptDialogue(
                                         buttonColor.copy(alpha = 0.3f)
                                     )
                                 )
-                            )
+                            ),
+                            enabled = !isLoading
                         ) {
-                            Text(
-                                text = "Cancel",
-                                fontFamily = karlaFont,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    color = textColor,
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }else {
+                                Text(
+                                    text = "Cancel",
+                                    fontFamily = karlaFont,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
 
+
+                        // Confirm button
                         Button(
                             onClick = {
                                 if (selectedCourseId.isEmpty()) {
@@ -491,6 +503,8 @@ fun SwapAcceptDialogue(
                                     return@Button
                                 }
 
+                                if (!isLoading) {
+                                    isLoading = true
                                 coroutineScope.launch {
                                     try {
                                         swapInTimeTable(
@@ -508,7 +522,13 @@ fun SwapAcceptDialogue(
                                     } catch (e: Exception) {
                                         Log.e("SwapAcceptDialogue", "Error swapping class", e)
                                         onShowSnackbar("Failed to swap class. Try again.", SnackbarType.ERROR)
+                                    }catch (e: Exception){
+                                        Log.e("SwapAcceptDialogue", "Error swapping class", e)
+                                        onShowSnackbar("Failed to swap class", SnackbarType.ERROR)
+                                    }finally {
+                                        isLoading = false
                                     }
+                                }
                                 }
                             },
                             modifier = Modifier
@@ -521,7 +541,7 @@ fun SwapAcceptDialogue(
                                 contentColor = textColor
                             ),
                             contentPadding = PaddingValues(0.dp),
-                            enabled = selectedCourseId.isNotEmpty()
+                            enabled = selectedCourseId.isNotEmpty() && !isLoading
                         ) {
                             Box(
                                 modifier = Modifier
@@ -533,24 +553,32 @@ fun SwapAcceptDialogue(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.swap), //SwapHoriz
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
+                                if (isLoading) {
+                                    CircularProgressIndicator(
+                                        color = textColor,
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
                                     )
+                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.swap), //SwapHoriz
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
 
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
 
-                                    Text(
-                                        text = "Confirm Swap",
-                                        fontFamily = karlaFont,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                        Text(
+                                            text = "Confirm Swap",
+                                            fontFamily = karlaFont,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
                             }
                         }

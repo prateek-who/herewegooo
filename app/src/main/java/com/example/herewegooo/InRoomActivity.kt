@@ -796,12 +796,14 @@ fun EventsComponent(
                         event.facultyName?.let { facultyName ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(vertical = 2.dp)
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.height(20.dp)
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.whitehitman),
                                     contentDescription = "Hitman",
                                     modifier = Modifier.size(14.dp)
+                                        .align(Alignment.CenterVertically)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(

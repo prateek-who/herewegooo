@@ -888,23 +888,43 @@ suspend fun getTimetable(
         Color(0xFF6C56F9), // Purple
         Color(0xFF4CAF50), // Green
         Color(0xFF2196F3), // Blue
-        Color(0xFFFF5722), // Bright Orange
-        Color(0xFFFF1493), // Hot Pink
-        Color(0xFF00E5FF), // Bright Cyan
-        Color(0xFF9C27B0), // Vibrant Purple
+        Color(0xFFFF5722), // Bright Orange done
+        Color(0xFFFF1493), // Hot Pink done
+        Color(0xFF00E5FF), // Bright Cyan done
+        Color(0xFF9C27B0), // Vibrant Purple done
         Color(0xFF536DFE), // Bright Indigo
         Color(0xFFD84315), // Vivid Brown
         Color(0xFF0288D1), // Bright Blue Grey
         Color(0xFFFF6D00), // Vivid Deep Orange
-        Color(0xFF64DD17), // Bright Light Green
-        Color(0xFF00BFA5), // Vibrant Teal
-        Color(0xFFFFD600), // Bright Yellow
+        Color(0xFF64DD17), // Bright Light Green done
+        Color(0xFF00BFA5), // Vibrant Teal done
+        Color(0xFFFFD600), // Bright Yellow done
         Color(0xFFAA00FF), // Electric Purple
-        Color(0xFF00E676), // Glowing Green
-        Color(0xFF00B0FF), // Brilliant Blue
-        Color(0xFFFF4081), // Vivid Pink
-        Color(0xFF76FF03), // Electric Green
-        Color(0xFFFF3D00), // Bright Red
+        Color(0xFF00E676), // Glowing Green done
+        Color(0xFF00B0FF), // Brilliant Blue done
+        Color(0xFFFF4081), // Vivid Pink done
+        Color(0xFF76FF03), // Electric Green done
+        Color(0xFFFF3D00), // Bright Red done
+        Color(0xFFFFA500),   // Vibrant Orange
+        Color(0xFF4B0082),   // Deep Indigo done
+        Color(0xFF008080),   // Teal
+        Color(0xFFFF6347),   // Tomato Red
+        Color(0xFF32CD32),   // Lime Green
+        Color(0xFF8A2BE2),   // Blue Violet
+        Color(0xFFFF4500),   // Orange Red
+        Color(0xFF20B2AA),   // Light Sea Green
+        Color(0xFFCD5C5C),   // Indian Red done
+        Color(0xFF7B68EE),   // Medium Slate Blue
+        Color(0xFFFF8C00),   // Dark Orange
+        Color(0xFF00CED1),   // Dark Turquoise
+        Color(0xFFFF00FF),   // Magenta
+        Color(0xFF7CFC00),   // Lawn Green
+        Color(0xFF1E90FF),   // Dodger Blue done
+        Color(0xFFFF69B4),   // Hot Pink
+        Color(0xFF00FF7F),   // Spring Green done
+        Color(0xFF4682B4),   // Steel Blue done
+        Color(0xFFFF1493),   // Deep Pink
+        Color(0xFF00FA9A)    // Medium Spring Green
     )
 
     val todayDateTime = LocalDateTime.now()

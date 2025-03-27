@@ -5,20 +5,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +49,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -147,20 +162,19 @@ class MainActivity : ComponentActivity() {
                             .imePadding(),
                         containerColor = Color(0xFF1E1E2E).copy(alpha = 1f),
                         snackbarHost = {
-                            SnackbarHost(snackbarHostState) { data ->
-                                val contentColor =
-                                    if (snackbarType.value == SnackbarType.ERROR) Color(
-                                        0xFFFF3B30
-                                    ) else Color(
-                                        0xFF34C759
-                                    )
-                                Snackbar(
-                                    snackbarData = data,
-                                    containerColor = Color.Black,
-                                    contentColor = contentColor,
-                                    shape = RoundedCornerShape(25.dp),
-                                )
-                            }
+                            CustomSnackbar(snackbarHostState = snackbarHostState, snackbarType = snackbarType.value, modifier = Modifier)
+//                            SnackbarHost(snackbarHostState) { data ->
+//                                val contentColor = when (snackbarType.value) {
+//                                    SnackbarType.ERROR -> Color(0xFFFF3B30)
+//                                    SnackbarType.SUCCESS ->Color(0xFF34C759)
+//                                }
+//                                Snackbar(
+//                                    snackbarData = data,
+//                                    containerColor = Color.Black,
+//                                    contentColor = contentColor,
+//                                    shape = RoundedCornerShape(25.dp),
+//                                )
+//                            }
                         },
                         bottomBar = {
                             if (currentRoute != "starthere" && currentRoute != null) {
@@ -204,14 +218,84 @@ class MainActivity : ComponentActivity() {
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar(
                                             message = message,
-                                            actionLabel = "x",
-                                            duration = SnackbarDuration.Short
                                         )
                                     }
                                 }
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun CustomSnackbar(
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+    snackbarType: SnackbarType = SnackbarType.SUCCESS
+) {
+    // Define color and icon based on snackbar type
+    val (backgroundColor, contentColor) = when (snackbarType) {
+        SnackbarType.SUCCESS -> Triple(
+            Color(0xFF2ecc71).copy(alpha = 0.9f),
+            Color.White,
+            painterResource(id = R.drawable.checkcircle)
+        )
+        SnackbarType.ERROR -> Triple(
+            Color(0xFFe74c3c).copy(alpha = 0.9f),
+            Color.White,
+            painterResource(id = R.drawable.transparent)
+        )
+    }
+
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) { data ->
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 30.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = backgroundColor
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 6.dp
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = data.visuals.message,
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        fontFamily = funnelFont
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Dismiss button here
+                IconButton(
+                    onClick = { data.dismiss() },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Dismiss",
+                        tint = contentColor.copy(alpha = 0.7f)
+                    )
                 }
             }
         }

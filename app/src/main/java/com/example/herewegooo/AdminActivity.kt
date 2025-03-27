@@ -697,8 +697,6 @@ suspend fun getRequests(client: SupabaseClient): List<RequestWithFacultyName> {
             else -> false
         }
     }
-
-    println(futureRequests)
     return futureRequests.map { request ->
         RequestWithFacultyName(
             request = request,

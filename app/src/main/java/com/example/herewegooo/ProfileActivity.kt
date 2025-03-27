@@ -560,22 +560,22 @@ fun SubjectChip(subject: String, color: Color) {
 }
 
 fun experienceCalculator(user: UserViewModel): Period {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val joinDate = LocalDate.parse(user.joinDate, formatter)
-    val currentDate = LocalDate.now()
+    return try {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val joinDate = LocalDate.parse(user.joinDate, formatter)
+        val currentDate = LocalDate.now()
 
-    val experience = Period.between(joinDate, currentDate)
+        val experience = Period.between(joinDate, currentDate)
 
-    return experience
+        //No 'return' because I am cool
+        experience
+    }catch (e: Exception){
+        Period.ZERO
+    }
 }
 
 suspend fun signoutUser(client: SupabaseClient) {
     client.auth.signOut(SignOutScope.GLOBAL)
-}
-
-// Track requests from profile page
-suspend fun getRequestInfo(client: SupabaseClient){
-
 }
 
 // Example of what UserViewModel might look like

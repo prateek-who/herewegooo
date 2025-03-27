@@ -85,6 +85,7 @@ fun SwapHistory(
     onShowSnackbar: (message: String, type: SnackbarType) -> Unit,
 ) {
     val client = supabaseClient()
+
     var refreshCounter by remember { mutableIntStateOf(0) }
     var isRefreshing by remember { mutableStateOf(false) }
     var lastRefreshTime by remember { mutableLongStateOf(0L) }
@@ -402,6 +403,9 @@ fun SwapHistoryItem(
     onShowSnackbar: (String, SnackbarType) -> Unit,
     onDeclineClicked: (SwapReceiveRequest) -> Unit
 ) {
+    var isLoading by remember { mutableStateOf(false) }
+    var isDialogLoading by remember { mutableStateOf(false) }
+
     var expanded by remember { mutableStateOf(false) }
     var fromTeacherName by remember { mutableStateOf("Loading...") }
     var toTeacherName by remember { mutableStateOf("Loading...") }
@@ -673,50 +677,96 @@ fun SwapHistoryItem(
                 ) {
                     // Decline button
                     Button(
-                        onClick = { onDeclineClicked(request) },
+                        onClick = {
+                            isLoading = true
+                            try {
+                                onDeclineClicked(request)
+                            }catch (e: Exception){
+                                onShowSnackbar("Failed to decline request", SnackbarType.ERROR)
+                            }finally {
+                                isLoading = false
+                            }
+                                  },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFF453A).copy(alpha = 0.8f)
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
+                        enabled = !isLoading
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.close),
-                            contentDescription = "Decline",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Decline",
-                            color = Color.White,
-                            fontFamily = karlaFont,
-                            fontSize = 14.sp
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.close),
+                                    contentDescription = "Decline",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Decline",
+                                    color = Color.White,
+                                    fontFamily = karlaFont,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
                     }
 
                     // Accept button
                     Button(
-                        onClick = { onApproveDialog = true },
+                        onClick = {
+                            if(!isDialogLoading) {
+                                try {
+                                    onApproveDialog = true
+                                } finally {
+                                    isDialogLoading = false
+                                }
+                            }
+                                  },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF30D158).copy(alpha = 0.8f)
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !isDialogLoading
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.checkcircle),
-                            contentDescription = "Accept",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Accept Swap",
-                            color = Color.White,
-                            fontFamily = karlaFont,
-                            fontSize = 14.sp
-                        )
+                        if (isDialogLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.checkcircle),
+                                    contentDescription = "Accept",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Accept Swap",
+                                    color = Color.White,
+                                    fontFamily = karlaFont,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
                     }
+
 
                     if (onApproveDialog) {
                         SwapAcceptDialogue(
@@ -866,6 +916,10 @@ suspend fun getSwapRequests(
     client: SupabaseClient,
     teacherId: String
 ): List<SwapReceiveRequest> {
+
+    val timeRightNow = LocalTime.now()
+    val dateRightNow = LocalDate.now()
+
     try {
         // Get all swap requests where teacher is either sender or receiver
         val rawList = client.from("swaprequest")
@@ -876,16 +930,34 @@ suspend fun getSwapRequests(
                         eq("to_id", teacherId)
                     }
                 }
-                order("class_date", Order.DESCENDING)
-                order("created_at", Order.DESCENDING)
+                order("class_date", Order.ASCENDING)
             }.decodeList<SwapReceiveRequest>()
-        return rawList
+
+        val pendingRequests = rawList.filter{ request ->
+            val requestedDate = LocalDate.parse(request.class_date)
+
+            // Includes all non-pending requests here
+            if (request.status != "pending") return@filter true
+
+            //Here we pull the pending requests aside and frisk them to order by date and time shit
+            when {
+                requestedDate.isAfter(dateRightNow) -> true
+                requestedDate.isEqual(dateRightNow) -> request.start_time.isAfter(timeRightNow)
+                else -> false
+            }
+        }
+
+        // Send all this shit back, i.e (non pending requests + pending requests sorted)
+        return pendingRequests.sortedWith(
+            compareBy ({ it.status != "pending" }, { LocalDate.parse(it.class_date) })
+        )
 
     } catch (e: Exception) {
         println("Error fetching swap requests: $e")
         return emptyList()
     }
 }
+
 
 suspend fun getUserName(client: SupabaseClient, userId: String): String? {
     return try {
@@ -901,6 +973,7 @@ suspend fun getUserName(client: SupabaseClient, userId: String): String? {
         null
     }
 }
+
 
 suspend fun denySwapRequestStatus(
     client: SupabaseClient,

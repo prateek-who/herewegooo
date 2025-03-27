@@ -1,5 +1,6 @@
 package com.example.herewegooo
 
+import android.content.Context
 import android.net.http.NetworkException
 import android.os.Build
 import android.os.Bundle
@@ -186,6 +187,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.widget.Toast
 
 
 @Composable
@@ -249,6 +253,7 @@ fun Login(
                     .background(Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
+                // KEEP THIS STUFF, THIS IS THE ORIGINAL LOGOOOOO
 //                Icon(
 //                    painter = painterResource(id = R.drawable.logo),
 //                    contentDescription = "App Logo",
@@ -493,8 +498,8 @@ fun Login(
                                     userViewModel,
                                     navController,
                                     onShowSnackbar,
-                                    { isLoading = it }
                                 )
+                                { isLoading = it }
                             } else {
                                 onShowSnackbar("Email/Password cannot be empty!", SnackbarType.ERROR)
                             }
@@ -603,25 +608,31 @@ fun Login(
                         )
                     }
 
-//                    Text(
-//                        text = "Students can access the app directly without faculty credentials.",
-//                        color = textColor,
-//                        fontSize = 15.sp,
-//                        lineHeight = 24.sp,
-//                        fontFamily = karlaFont
-//                    )
-
                     Spacer(modifier = Modifier.height(20.dp))
 
+
                     // Student access button with animated gradient border - updated background color
+                    val context = LocalContext.current
                     Button(
                         onClick = {
+                            if (context.isInternetAvailable()){
                             userViewModel.userRole = "student"
                             userViewModel.userName = "student"
                             navController.navigate(route = "home") {
                                 popUpTo(route = "starthere") {
                                     inclusive = true
                                 }
+                            }
+                        }else{
+                            onShowSnackbar(
+                                "No internet connection. Please check your network connection!",
+                                SnackbarType.ERROR
+                            )
+//                                Toast.makeText(
+//                                    context,
+//                                    "No internet connection. Please check your network connection!",
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
                             }
                         },
                         modifier = Modifier
@@ -666,6 +677,17 @@ fun Login(
     }
 }
 
+fun Context.isInternetAvailable(): Boolean {
+    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
+            as ConnectivityManager
+
+    val network = connectivityManager.activeNetwork ?: return false
+    val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+    return networkCapabilities.run {
+        hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    }
+}
 
 // Helper function to handle login logic
 private fun handleLogin(
@@ -683,6 +705,7 @@ private fun handleLogin(
         try {
             singInUser(client, email, password)
                 .onSuccess {
+                    println("We are loogin in actually!")
                     val userId = client.auth.currentUserOrNull()?.id ?: run {
                         withContext(Dispatchers.Main) {
                             setLoading(false)
@@ -700,7 +723,13 @@ private fun handleLogin(
                     val userSubs = client.from("courses")
                         .select(Columns.list("course_name")) {
                             filter {
-                                eq("faculty_id", userId)
+                                or {
+                                    eq("faculty_one_id", userId)
+                                    eq("faculty_two_id", userId)
+                                    eq("faculty_three_id", userId)
+                                    eq("faculty_four_id", userId)
+                                    eq("faculty_five_id", userId)
+                                }
                             }
                         }.decodeList<LoginDataTwo>()
 
@@ -711,7 +740,7 @@ private fun handleLogin(
                         userViewModel.userRole = user.role
                         userViewModel.userName = user.username
                         userViewModel.profilePic = user.profile_pic
-                        userViewModel.joinDate = user.join_date
+                        userViewModel.joinDate = user.join_date?: "2004-06-12"
                         userViewModel.favouriteQuote = user.favourite_quote
                         userViewModel.course_names = courseNamesList
 
@@ -725,6 +754,7 @@ private fun handleLogin(
                     }
                 }
                 .onFailure { error ->
+                    println("Not working buddy")
                     withContext(Dispatchers.Main) {
                         val message = when (error) {
                             is AuthWeakPasswordException -> "Your password is too weak!"

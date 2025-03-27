@@ -498,7 +498,16 @@ fun SwapClassDialog(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ){
                         Button(
-                            onClick = onDismiss,
+                            onClick = {
+                                if (!isLoading){
+                                    isLoading = true
+                                    try {
+                                        onDismiss()
+                                    }finally {
+                                        isLoading = false
+                                    }
+                                }
+                                      },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
@@ -516,14 +525,23 @@ fun SwapClassDialog(
                                         buttonColor.copy(alpha = 0.3f)
                                     )
                                 )
-                            )
+                            ),
+                            enabled = !isLoading
                         ) {
-                            Text(
-                                text = "Cancel",
-                                fontFamily = karlaFont,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    color = textColor,
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = "Cancel",
+                                    fontFamily = karlaFont,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
 
                         Button(
@@ -533,6 +551,8 @@ fun SwapClassDialog(
                                 } else if (reason.isBlank()) {
                                     onShowSnackbar("Please enter a reason for swap request", SnackbarType.ERROR)
                                 } else {
+                                    if (!isLoading){
+                                        isLoading = true
                                     coroutineScope.launch {
                                         try {
                                             val swapRequest = swapperList(
@@ -546,13 +566,21 @@ fun SwapClassDialog(
                                                 status = "pending",
                                             )
 
-                                            println("we are about to get in")
                                             swapFacultyRequest(client, swapRequest)
                                             onDismiss()
-                                            onShowSnackbar("Swap request sent successfully!", SnackbarType.SUCCESS)
+                                            onShowSnackbar(
+                                                "Swap request sent successfully!",
+                                                SnackbarType.SUCCESS
+                                            )
                                         } catch (e: Exception) {
-                                            onShowSnackbar("Failed to send swap request: ${e.message}", SnackbarType.ERROR)
+                                            onShowSnackbar(
+                                                "Failed to send swap request: ${e.message}",
+                                                SnackbarType.ERROR
+                                            )
+                                        } finally {
+                                            isLoading = false
                                         }
+                                    }
                                     }
                                 }
                             },
@@ -565,7 +593,8 @@ fun SwapClassDialog(
                                 containerColor = Color.Transparent,
                                 contentColor = textColor
                             ),
-                            contentPadding = PaddingValues(0.dp)
+                            contentPadding = PaddingValues(0.dp),
+                            enabled = !isLoading
                         ) {
                             Box(
                                 modifier = Modifier
@@ -577,6 +606,13 @@ fun SwapClassDialog(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator(
+                                        color = textColor,
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
@@ -597,6 +633,7 @@ fun SwapClassDialog(
                                     )
                                 }
                             }
+                                }
                         }
                     }
                 }
